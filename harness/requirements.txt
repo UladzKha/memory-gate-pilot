@@ -1,0 +1,4 @@
+PyYAML>=6.0,<7
+transformers>=4.50,<6
+torch>=2.0
+sentencepiece>=0.2

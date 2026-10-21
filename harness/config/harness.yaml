@@ -1,0 +1,34 @@
+ollama:
+  base_url: http://localhost:11434
+  models:
+    - qwen3.8:27b
+    - gemma4:31b
+    - mistral-small3.2:24b
+  temperature: 0
+  seed: 42
+  num_ctx: 16384
+  max_output_tokens: 4096
+  request_timeout_seconds: 1800
+
+paths:
+  dataset_dir: data/processed/email
+  report: data/processed/email/REPORT.md
+  attack_inboxes: data/processed/email/attack_inboxes.jsonl
+  benign_set: data/processed/email/benign_set.jsonl
+  clean_set: data/processed/email/clean_set.jsonl
+  prompts_dir: harness/prompts
+  output_dir: results
+
+defenses:
+  conditions:
+    - no_defense
+    - prompt_guard
+    - protectai_deberta
+  prompt_guard:
+    model_id: meta-llama/Llama-Prompt-Guard-2-86M
+    threshold: 0.5
+  protectai_deberta:
+    model_id: protectai/deberta-v3-base-prompt-injection-v2
+    threshold: 0.5
+  gate:
+    import_path: null
