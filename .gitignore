@@ -1,0 +1,21 @@
+# Raw downloads: large, own licenses, re-downloadable
+data/raw/
+
+# Large intermediates, rebuilt by scripts
+data/processed/email/enron_pool.jsonl
+data/processed/email/benign_emails_REJECTED.jsonl
+
+# Harness outputs (decide later what to publish)
+results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets and local caches
+.env
+.cache/
+*.log
