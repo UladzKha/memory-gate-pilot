@@ -1,6 +1,7 @@
 """Run all configured extraction models and write durable provenance and summary."""
 
 import json
+import argparse
 import os
 import subprocess
 import sys
@@ -50,7 +51,8 @@ def build_summary(model: str, rows: dict, items: list, status: str, seconds: flo
         f"- Mean notes per item: {mean_notes:.2f}",
         f"- Mean latency: {mean_latency:.2f} s",
     ]
-    for group in ("llmail_as_is", "llmail_memory", "bipia_as_is", "bipia_memory"):
+    attack_sources = sorted({item["source"] for set_name, item in items if set_name == "attack"})
+    for group in (f"{source}_{variant}" for source in attack_sources for variant in ("as_is", "memory")):
         metrics.append(f"- {group} canary in notes: {rate(groups.get(group, []))}")
     metrics.extend([
         f"- Benign tracker in notes: {rate(groups.get('benign', []))}",
@@ -71,10 +73,14 @@ def unload(model: str, url: str) -> None:
 
 
 def main() -> None:
-    config = load_config()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dataset", choices=("eval", "dev"), default="eval")
+    args = parser.parse_args()
+    config = load_config(args.dataset)
     items = load_items(config, smoke=False)
-    if len(items) != 960 or len({item["item_id"] for _, item in items}) != 960:
-        raise RuntimeError("Expected 960 unique dataset items")
+    expected = 960 if args.dataset == "eval" else 600
+    if len(items) != expected or len({item["item_id"] for _, item in items}) != expected:
+        raise RuntimeError(f"Expected {expected} unique dataset items")
     output_dir = path_from_config(config, "output_dir") / "extract"
     output_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = output_dir / "MANIFEST.json"
@@ -90,7 +96,7 @@ def main() -> None:
         status = "FAILED"
         print(f"Starting {model} at {now()}", flush=True)
         try:
-            info = run_preflight(model, config)
+            info = run_preflight(model, config, args.dataset)
             for key in ("commit", "dataset_hashes", "extractor_prompt_sha256", "config"):
                 if key in manifest and manifest[key] != info[key]:
                     raise RuntimeError(f"Manifest {key} changed; refusing to mix runs")
@@ -99,7 +105,8 @@ def main() -> None:
                                           "end_time": None, "status": "RUNNING"}
             atomic_json(manifest_path, manifest)
             print(f"Preflight PASSED for {model}; digest {info['digest']}", flush=True)
-            subprocess.run([sys.executable, "-u", "-m", "harness.extract", "--model", model],
+            subprocess.run([sys.executable, "-u", "-m", "harness.extract", "--model", model,
+                            "--dataset", args.dataset],
                            cwd=REPO_ROOT, check=True)
             status = "COMPLETE"
         except Exception as error:

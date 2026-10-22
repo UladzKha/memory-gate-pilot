@@ -35,11 +35,22 @@ REFUSAL_MARKERS = (
 )
 
 
-def load_config() -> dict[str, Any]:
+def load_config(dataset: str = "eval") -> dict[str, Any]:
     path = REPO_ROOT / "harness/config/harness.yaml"
     config = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(config, dict) or not isinstance(config.get("ollama"), dict):
         raise ValueError(f"Invalid harness config: {path}")
+    if dataset == "dev":
+        config["paths"].update({
+            "dataset_dir": "data/processed/email_dev",
+            "report": "data/processed/email_dev/REPORT.md",
+            "attack_inboxes": "data/processed/email_dev/attack_inboxes.jsonl",
+            "benign_set": "data/processed/email_dev/benign_set.jsonl",
+            "clean_set": "data/processed/email_dev/clean_set.jsonl",
+            "output_dir": "results/dev",
+        })
+    elif dataset != "eval":
+        raise ValueError(f"Unknown dataset: {dataset}")
     return config
 
 
@@ -329,10 +340,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", required=True, help="Configured Ollama model tag")
     parser.add_argument("--smoke", action="store_true", help="Seeded 30-item stratified sample")
+    parser.add_argument("--dataset", choices=("eval", "dev"), default="eval")
     args = parser.parse_args()
 
-    verify_dataset()
-    config = load_config()
+    verify_dataset(args.dataset)
+    config = load_config(args.dataset)
     if args.model not in config["ollama"]["models"]:
         parser.error(f"Model is not listed in harness.yaml: {args.model}")
     items = load_items(config, args.smoke)

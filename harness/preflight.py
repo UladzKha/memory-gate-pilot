@@ -17,13 +17,15 @@ def get_json(base_url: str, endpoint: str, timeout: int = 20) -> dict:
         return json.load(response)
 
 
-def git_identity() -> str:
+def git_identity(dataset: str = "eval") -> str:
+    paths = ["harness/", "data/processed/email/"] if dataset == "eval" else [
+        "harness/", "scripts/", "data/processed/email_dev/", "data/processed/email/"]
     status = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=all", "--", "harness/", "data/processed/email/"],
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", *paths],
         cwd=REPO_ROOT, capture_output=True, text=True, check=True,
     )
     if status.stdout.strip():
-        raise RuntimeError("Git tree is dirty in harness/ or data/processed/email/:\n" + status.stdout)
+        raise RuntimeError("Git tree is dirty in extraction inputs/code:\n" + status.stdout)
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True).strip()
 
 
@@ -42,12 +44,14 @@ def loaded_models(config: dict) -> dict:
     return state
 
 
-def run_preflight(model: str, config: dict | None = None) -> dict:
-    config = config or load_config()
+def run_preflight(model: str, config: dict | None = None, dataset: str = "eval") -> dict:
+    config = config or load_config(dataset)
     if model not in config["ollama"]["models"]:
         raise ValueError(f"Model is not configured: {model}")
-    verify_dataset()
-    commit = git_identity()
+    verify_dataset(dataset)
+    if dataset == "dev":
+        verify_dataset("eval")
+    commit = git_identity(dataset)
     print(f"Preflight commit: {commit}", flush=True)
     free = shutil.disk_usage(REPO_ROOT).free
     if free <= 5_000_000_000:
@@ -72,7 +76,7 @@ def run_preflight(model: str, config: dict | None = None) -> dict:
     prompt = path_from_config(config, "prompts_dir") / "extractor_system.txt"
     return {
         "model": model, "digest": matching[0].get("digest"), "commit": commit,
-        "dataset_hashes": {name: hashlib.sha256((DATASET_DIR / name).read_bytes()).hexdigest() for name in DATASET_FILES},
+        "dataset_hashes": {name: hashlib.sha256((path_from_config(config, "dataset_dir") / name).read_bytes()).hexdigest() for name in DATASET_FILES},
         "extractor_prompt_sha256": hashlib.sha256(prompt.read_bytes()).hexdigest(),
         "config": config, "preflight_at": datetime.now(timezone.utc).isoformat(),
         "size": loaded[0]["size"], "size_vram": loaded[0]["size_vram"],
@@ -82,9 +86,10 @@ def run_preflight(model: str, config: dict | None = None) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", required=True)
+    parser.add_argument("--dataset", choices=("eval", "dev"), default="eval")
     args = parser.parse_args()
     try:
-        result = run_preflight(args.model)
+        result = run_preflight(args.model, dataset=args.dataset)
     except Exception as error:
         parser.exit(1, f"Preflight FAILED for {args.model}: {error}\n")
     print(json.dumps(result, indent=2), flush=True)
