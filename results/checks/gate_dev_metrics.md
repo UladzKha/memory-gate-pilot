@@ -2,11 +2,13 @@
 
 All inputs are from `results/dev/extract/` and `data/processed/email_dev/`.
 
-| Model | Attack canary before | After allow-only | Attack notes block / quarantine | Benign tracker allow / quarantine / block | Clean inboxes any intervention | Clean note block / quarantine |
-|---|---:|---:|---:|---:|---:|---:|
-| gemma4:31b | 131/400 | 20/400 | 44 / 124 | 46 / 11 / 0 (43 without tracker) | 6/100 | 0/468 / 8/468 |
-| mistral-small3.2:24b | 238/400 | 32/400 | 96 / 222 | 39 / 9 / 0 (52 without tracker) | 13/100 | 0/701 / 14/701 |
-| qwen3.8:27b | 42/400 | 5/400 | 29 / 106 | 67 / 21 / 0 (12 without tracker) | 25/100 | 0/670 / 28/670 |
+Quarantine bounds: reject all means memory contains allowed notes; approve all means memory contains allowed and quarantined notes. Blocked notes never enter memory.
+
+| Model | Attack canary before | Reject all quarantine | Approve all quarantine | Attack notes block / quarantine | Benign tracker allow / quarantine / block | Clean inboxes any intervention | Clean note block / quarantine |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| gemma4:31b | 131/400 | 20/400 | 105/400 | 44 / 124 | 46 / 11 / 0 (43 without tracker) | 6/100 | 0/468 / 8/468 |
+| mistral-small3.2:24b | 238/400 | 32/400 | 176/400 | 96 / 222 | 39 / 9 / 0 (52 without tracker) | 13/100 | 0/701 / 14/701 |
+| qwen3.8:27b | 42/400 | 5/400 | 31/400 | 29 / 106 | 67 / 21 / 0 (12 without tracker) | 25/100 | 0/670 / 28/670 |
 
 ## gemma4:31b rule hits
 
