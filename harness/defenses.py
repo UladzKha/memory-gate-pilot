@@ -125,7 +125,7 @@ class GateAdapter(Defense):
                 raise TypeError("Imported gate must provide check(note)")
         decision = self._gate.check(note, None, "")
         outcome = getattr(decision, "outcome", decision)
-        if outcome not in ("allow", "quarantine", "block"):
+        if outcome not in ("allow", "allow_tainted", "block"):
             raise ValueError(f"Real gate returned invalid decision: {decision!r}")
         return outcome
 
@@ -134,10 +134,16 @@ class GateAdapter(Defense):
             self.check("")
         decisions = self._gate.check_batch(notes, inbox, owner)
         if len(decisions) != len(notes) or any(
-            decision.outcome not in ("allow", "quarantine", "block") for decision in decisions
+            decision.outcome not in ("allow", "allow_tainted", "block") for decision in decisions
         ):
             raise ValueError("Real gate returned invalid batch decisions")
         return decisions
+
+    def memory_entries(self, notes: list[str], inbox: list[dict], owner: str) -> list:
+        if self._gate is None:
+            self.check("")
+        from memgate import write_memory
+        return write_memory(notes, inbox, owner)
 
 
 def build_defense(name: str, config: dict) -> Defense:

@@ -2,18 +2,18 @@
 
 Only `results/dev/extract/` and `data/processed/email_dev/` were scored. v0.1 is the frozen `v0.1.0-dev` gate (commit `2f7741b`); v0.2 is the installed gate.
 
-Reject all: memory contains allowed notes. Approve all: memory contains allowed and quarantined notes. Blocked notes never enter memory.
+Bounding scenarios: exclude all tainted/quarantined notes, or include all of them. In v0.2, allow_tainted notes are actually stored with provenance. Blocked notes never enter memory.
 
 Benign outcomes count tracker-bearing items; the parenthesis counts items with no extracted tracker.
 
-| Model | Gate | Attack canary before | Reject all | Approve all | Benign tracker allow / quarantine / block | Clean inboxes any quarantine or block | Clean per-note allow / quarantine / block rates |
+| Model | Gate | Attack canary before | Exclude tainted | Include tainted | Benign tracker allow / tainted / block | Clean inboxes any tainted or block | Clean per-note allow / tainted / block rates |
 |---|---|---:|---:|---:|---:|---:|---:|
 | gemma4:31b | v0.1 | 131/400 | 20/400 | 105/400 | 46 / 11 / 0 (43 without tracker) | 6/100 | 460/468 (98.3%) / 8/468 (1.7%) / 0/468 (0.0%) |
-| gemma4:31b | v0.2 | 131/400 | 2/400 | 104/400 | 42 / 15 / 0 (43 without tracker) | 34/100 | 426/468 (91.0%) / 42/468 (9.0%) / 0/468 (0.0%) |
+| gemma4:31b | v0.2 | 131/400 | 3/400 | 33/400 | 42 / 15 / 0 (43 without tracker) | 18/100 | 447/468 (95.5%) / 21/468 (4.5%) / 0/468 (0.0%) |
 | mistral-small3.2:24b | v0.1 | 238/400 | 32/400 | 176/400 | 39 / 9 / 0 (52 without tracker) | 13/100 | 687/701 (98.0%) / 14/701 (2.0%) / 0/701 (0.0%) |
-| mistral-small3.2:24b | v0.2 | 238/400 | 10/400 | 176/400 | 28 / 20 / 0 (52 without tracker) | 52/100 | 623/701 (88.9%) / 78/701 (11.1%) / 0/701 (0.0%) |
+| mistral-small3.2:24b | v0.2 | 238/400 | 9/400 | 82/400 | 32 / 16 / 0 (52 without tracker) | 27/100 | 667/701 (95.1%) / 34/701 (4.9%) / 0/701 (0.0%) |
 | qwen3.8:27b | v0.1 | 42/400 | 5/400 | 31/400 | 67 / 21 / 0 (12 without tracker) | 25/100 | 642/670 (95.8%) / 28/670 (4.2%) / 0/670 (0.0%) |
-| qwen3.8:27b | v0.2 | 42/400 | 1/400 | 30/400 | 36 / 52 / 0 (12 without tracker) | 54/100 | 585/670 (87.3%) / 85/670 (12.7%) / 0/670 (0.0%) |
+| qwen3.8:27b | v0.2 | 42/400 | 1/400 | 16/400 | 39 / 49 / 0 (12 without tracker) | 37/100 | 617/670 (92.1%) / 53/670 (7.9%) / 0/670 (0.0%) |
 
 ## Rule hits
 
@@ -24,21 +24,21 @@ Counts are per note; a note can hit multiple rules.
 | gemma4:31b | v0.1 | attack | 12 | 21 | 3 | 20 | 128 | 44 |
 | gemma4:31b | v0.1 | benign | 0 | 0 | 0 | 0 | 16 | 0 |
 | gemma4:31b | v0.1 | clean | 0 | 0 | 0 | 0 | 8 | 0 |
-| gemma4:31b | v0.2 | attack | 13 | 21 | 3 | 20 | 279 | 47 |
-| gemma4:31b | v0.2 | benign | 0 | 0 | 0 | 0 | 49 | 0 |
-| gemma4:31b | v0.2 | clean | 0 | 0 | 0 | 0 | 42 | 0 |
+| gemma4:31b | v0.2 | attack | 13 | 178 | 3 | 20 | 225 | 47 |
+| gemma4:31b | v0.2 | benign | 0 | 0 | 0 | 0 | 22 | 0 |
+| gemma4:31b | v0.2 | clean | 0 | 0 | 0 | 0 | 21 | 0 |
 | mistral-small3.2:24b | v0.1 | attack | 45 | 50 | 10 | 13 | 256 | 60 |
 | mistral-small3.2:24b | v0.1 | benign | 0 | 0 | 0 | 0 | 19 | 0 |
 | mistral-small3.2:24b | v0.1 | clean | 0 | 0 | 0 | 0 | 14 | 0 |
-| mistral-small3.2:24b | v0.2 | attack | 46 | 51 | 10 | 13 | 559 | 62 |
-| mistral-small3.2:24b | v0.2 | benign | 0 | 0 | 0 | 0 | 80 | 0 |
-| mistral-small3.2:24b | v0.2 | clean | 0 | 0 | 0 | 0 | 78 | 0 |
+| mistral-small3.2:24b | v0.2 | attack | 46 | 256 | 10 | 13 | 441 | 62 |
+| mistral-small3.2:24b | v0.2 | benign | 0 | 0 | 0 | 0 | 53 | 0 |
+| mistral-small3.2:24b | v0.2 | clean | 0 | 0 | 0 | 0 | 34 | 0 |
 | qwen3.8:27b | v0.1 | attack | 15 | 17 | 2 | 2 | 115 | 14 |
 | qwen3.8:27b | v0.1 | benign | 0 | 0 | 0 | 0 | 41 | 1 |
 | qwen3.8:27b | v0.1 | clean | 0 | 0 | 0 | 0 | 28 | 0 |
-| qwen3.8:27b | v0.2 | attack | 16 | 17 | 2 | 2 | 239 | 16 |
-| qwen3.8:27b | v0.2 | benign | 0 | 0 | 0 | 0 | 128 | 1 |
-| qwen3.8:27b | v0.2 | clean | 0 | 0 | 0 | 0 | 85 | 0 |
+| qwen3.8:27b | v0.2 | attack | 16 | 66 | 2 | 2 | 165 | 16 |
+| qwen3.8:27b | v0.2 | benign | 0 | 0 | 0 | 0 | 90 | 1 |
+| qwen3.8:27b | v0.2 | clean | 0 | 0 | 0 | 0 | 53 | 0 |
 
 ## Attack canary-note link scores
 
