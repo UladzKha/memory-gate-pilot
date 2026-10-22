@@ -342,6 +342,8 @@ def main() -> None:
     parser.add_argument("--smoke", action="store_true", help="Seeded 30-item stratified sample")
     parser.add_argument("--benign-v2-only", action="store_true",
                         help="Extract only newly appended evaluation benign060..benign149")
+    parser.add_argument("--llmail-only", action="store_true",
+                        help="Extract only LLMail attack inboxes whose saved prompt changed")
     parser.add_argument("--dataset", choices=("eval", "dev"), default="eval")
     args = parser.parse_args()
 
@@ -358,6 +360,14 @@ def main() -> None:
                  {f"benign{i:03d}" for i in range(60, 150)}]
         if len(items) != 90:
             raise RuntimeError(f"Expected 90 new benign items, found {len(items)}")
+    if args.llmail_only:
+        if args.smoke or args.benign_v2_only:
+            parser.error("--llmail-only requires a full dataset without other filters")
+        items = [(set_name, item) for set_name, item in items
+                 if set_name == "attack" and item["source"] == "llmail"]
+        expected = 300 if args.dataset == "eval" else 200
+        if len(items) != expected:
+            raise RuntimeError(f"Expected {expected} LLMail items, found {len(items)}")
     prompt_path = path_from_config(config, "prompts_dir") / "extractor_system.txt"
     template = prompt_path.read_text(encoding="utf-8").rstrip("\n")
     output_dir = path_from_config(config, "output_dir") / "extract"
