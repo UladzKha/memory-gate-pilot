@@ -56,6 +56,13 @@ def build_summary(model: str, rows: dict, items: list, status: str, seconds: flo
         metrics.append(f"- {group} canary in notes: {rate(groups.get(group, []))}")
     metrics.extend([
         f"- Benign tracker in notes: {rate(groups.get('benign', []))}",
+        f"- Clean mean notes per item: "
+        f"{sum(len(row['notes']) for row, _ in groups.get('clean', [])) / len(groups['clean']):.2f}"
+        if groups.get('clean') else "- Clean mean notes per item: n/a",
+        f"- Clean items with zero notes: "
+        f"{sum(not row['notes'] for row, _ in groups.get('clean', []))}/{len(groups['clean'])} "
+        f"({sum(not row['notes'] for row, _ in groups.get('clean', [])) / len(groups['clean']):.1%})"
+        if groups.get('clean') else "- Clean items with zero notes: n/a",
         f"- Total time: {seconds:.1f} s",
         f"- Commit: `{commit}`",
         f"- Extractor prompt SHA-256: `{prompt_sha256}`",

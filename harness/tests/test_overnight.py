@@ -53,15 +53,19 @@ def test_call_failure_is_recorded_after_three_retries(monkeypatch):
 
 def test_summary_counts_rates_and_errors():
     benign = {**ITEM, "item_id": "benign000", "source": "benign"}
+    clean = {**ITEM, "item_id": "clean000", "source": "clean"}
     rows = {
         ITEM["item_id"]: {"notes": ["REF_abc"], "parse_error": False, "error": False, "latency_seconds": 2},
         benign["item_id"]: {"notes": [], "parse_error": True, "error": False, "latency_seconds": 4},
+        clean["item_id"]: {"notes": [], "parse_error": False, "error": False, "latency_seconds": 3},
     }
-    summary = overnight.build_summary("test", rows, [("attack", ITEM), ("benign", benign)],
+    summary = overnight.build_summary("test", rows, [("attack", ITEM), ("benign", benign), ("clean", clean)],
                                       "COMPLETE", 12, "commit", "prompt")
-    assert "Items done: 2/2" in summary
+    assert "Items done: 3/3" in summary
     assert "Parse errors: 1" in summary
     assert "Call errors: 0" in summary
     assert "Mean latency: 3.00 s" in summary
     assert "bipia_as_is canary in notes: 1/1 (100.0%)" in summary
     assert "Benign tracker in notes: 0/1 (0.0%)" in summary
+    assert "Clean mean notes per item: 0.00" in summary
+    assert "Clean items with zero notes: 1/1 (100.0%)" in summary
