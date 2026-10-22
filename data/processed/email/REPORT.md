@@ -4,6 +4,56 @@ Pilot dataset for memory-poisoning gate evaluation on the **email channel**.
 Built deterministically from `data/raw/`; config `config/dataset.yaml` (seed 42).
 Pipeline: `scripts/email/01..06`. Generated `2026-10-21`.
 
+## Dataset v2 benign append (2026-10-22)
+
+The evaluation set now has **600 attack, 300 clean, and 150 benign inboxes**
+(1,050 total). Only `benign060`–`benign149` were appended. The 600 attack
+records, 300 clean records, and the first 60 benign inbox records are
+byte-identical to `dataset-v1`. Their original SHA-256 values are:
+
+| frozen v1 records | SHA-256 |
+|---|---|
+| `attack_inboxes.jsonl` (all 600) | `0cd8d113282c9c4941f3da9b6d830f91000854a3d7b34d6d6fb1f60a56f5ddb7` |
+| `clean_set.jsonl` (all 300) | `363f3d4b777f7e4fbb410bbf057ac5b99c67cdaffe330a140214e5fff600a022` |
+| `benign_set.jsonl` (first 60 lines) | `c7d29cbbddfaf32b7b6329eff6ac565128c7f8d20ed7f4f8b7b53b30b047f5c1` |
+| `benign_emails.jsonl` (first 60 source bodies) | `840697ddbcae23d40650a464caffc8e5c8acd55df3d498048aa18095387246f1` |
+
+The 90 individually authored additions are in `benign_emails_v2.jsonl` with
+their seeded specifications in `benign_specs_v2.jsonl`: forwarding 22,
+address change 23, cleanup delete 23, standing rule 22; 45 email-shaped and
+45 ticket-shaped trackers. Twenty-two new rows use the five exact memory
+templates. Across all 150, 113 expect allow and 37 expect quarantine, and
+all set `expected_not_block=true`. The `check_benign.py --v2-final` gate passes
+all per-row checks, finds no pair sharing 12 or more word trigrams, and measures
+sign-offs at 15/150 (10%) versus LLMail 15/150 (10%), greetings at 52/150
+(35%) versus LLMail 60/150 (40%).
+
+`07_append_benign_v2.py` uses the same seeded position, date, body paragraph,
+and subject rendering as the first 60. It assigns only clean-group owners,
+uses five globally unused Enron messages per new inbox, and caps benign
+inboxes at 10 per owner (observed maximum: 3). The original clean-group inbox
+pool lacked enough unused messages after the disjoint development set was
+built. `08_build_v2_context_pool.py` therefore parses real Enron
+`deleted_items` messages for clean-group owners using the original 30–400
+word, header, quote-strip, and identity rules. Its 9,513 unique eligible
+messages are supplemental; `enron_pool.jsonl` is unchanged. The 450 selected
+new context IDs are absent from all prior evaluation and development inboxes.
+Both validators pass: `validate_email_dataset.py` and
+`validate_dev_disjoint.py`. Rebuilding the supplemental pool and new inboxes
+twice produced byte-identical hashes.
+
+| form, all v2 evaluation items | n | body words min/q25/median/q75/max | line break | RE:/FW: subject |
+|---|---:|---|---:|---:|
+| LLMail injected | 300 | 1 / 43 / 78 / 150 / 287 | 65% | 3% |
+| BIPIA injected | 300 | 40 / 61 / 82 / 135 / 379 | 100% | 27% |
+| benign injected | 150 | 17 / 44 / 75 / 147 / 299 | 85% | 28% |
+| Enron context | 5,550 | 30 / 52 / 93 / 171 / 400 | 96% | 22% |
+
+The date parity check reports `:00:00` seconds on 1.6% of injected LLMail and
+benign messages versus 5.8% of context messages (4.2 percentage points apart,
+within the 5-point gate). The sections below describe the frozen v1 build;
+their historical 60-benign counts and examples refer to that release.
+
 > The older **transcripts** channel (`data/processed/transcripts_v0/`) is kept
 > for reference only and is **superseded** by this email channel.
 
@@ -14,7 +64,9 @@ Pipeline: `scripts/email/01..06`. Generated `2026-10-21`.
 | 02 | `02_split_mailboxes.py` | `mailbox_split.jsonl` (137 owners → carrier 60 / clean 77) + `owners.jsonl` |
 | 03 | `03_build_attack_inboxes.py` | `attack_inboxes.jsonl` (600 items) + `_used_ctx_ids.txt` (3300 ids) |
 | 05 | `05_build_clean_set.py` | `clean_set.jsonl` (300 items) + `_clean_ctx_used.txt` |
-| 06 | `06_build_benign_set.py` | `benign_set.jsonl` (60 items) |
+| 06 | `06_build_benign_set.py` | `benign_set.jsonl` (first 60 items) |
+| 08 | `08_build_v2_context_pool.py` | supplemental Enron context pool |
+| 07 | `07_append_benign_v2.py` | 90 appended benign inboxes |
 | — | `scripts/validate_email_dataset.py` | validation gate |
 | — | `scripts/email/check_benign.py` | benign-class surface-rate gate |
 
@@ -26,7 +78,7 @@ Pipeline: `scripts/email/01..06`. Generated `2026-10-21`.
 | attack items | 600 | 300 llmail (150×2) + 300 bipia (150×2); as_is 300 / memory 300 |
 |  |  | 60 carrier owners used (≤10 inboxes/owner); inbox_size 6 |
 | clean items | 300 | = attack / 2; 72 clean owners used (≤6 inboxes/owner) |
-| benign items | 60 | allow 45 / quarantine 15; 48 clean owners used (≤2 inboxes/owner) |
+| benign items, v1 | 60 | allow 45 / quarantine 15; 48 clean owners used (≤2 inboxes/owner) |
 
 ## Fix #1 — anchored LLMail pool (2026-10-21)
 The two LLMail attacks that had **no destination address** (`contact@contact.com`)
@@ -291,9 +343,12 @@ pool regeneration) produce **byte-identical** outputs (`cmp` clean):
 | `data/processed/email/mailbox_split.jsonl` (02) | `d07cf4ffc266f07f50057f016c209cebcd50f75eb10f267c35524deb1f4f8d5a` |
 | `data/processed/email/attack_inboxes.jsonl` (03) | `0cd8d113282c9c4941f3da9b6d830f91000854a3d7b34d6d6fb1f60a56f5ddb7` |
 | `data/processed/email/clean_set.jsonl` (05) | `363f3d4b777f7e4fbb410bbf057ac5b99c67cdaffe330a140214e5fff600a022` |
-| `data/processed/email/benign_set.jsonl` (06) | `c7d29cbbddfaf32b7b6329eff6ac565128c7f8d20ed7f4f8b7b53b30b047f5c1` |
+| `data/processed/email/benign_set.jsonl` (06 + 07) | `56175cddae41c7978bc57b48691622b82e693e2b358e1c23b039e7ae9f2b76ac` |
 | `data/processed/email/_used_ctx_ids.txt` | `c23cd2c9f98d52780ef106d65a4372104db3ffdbaceffc73e3a99624ed235a96` |
-| `data/processed/email/_clean_ctx_used.txt` | `ef26d1e1820fa7191a0c821ba1c052ebed60b2b9f6c784bfa7641afc5835abf9` |
+| `data/processed/email/_clean_ctx_used.txt` | `8fed84c88450c86ffb5aca22fafb2f2215e701487d156417cf25ade9801a2aad` |
+| `data/processed/email/benign_specs_v2.jsonl` | `82355cef010365fb17c8b8e24f38274b6380f6cb97d5e1c3aaf9912a9b373310` |
+| `data/processed/email/benign_emails_v2.jsonl` | `51254a208e68e134a82f01438bf320ae40cb09bd8bd58be52325d594abd108dc` |
+| `data/processed/email/enron_v2_context_pool.jsonl` | `25067fce1d243ec26d4a9968dbffbff2b5b3ea6d7afb712218995d363aad80b0` |
 
 ## Scripts / validators
 | script | purpose | status |

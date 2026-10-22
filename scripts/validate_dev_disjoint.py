@@ -32,7 +32,8 @@ def validate():
     eval_ll = {r["body"] for r in eval_pool if r["source"] == "llmail"}
     eval_teams = {r["team_id"] for r in eval_pool if r["source"] == "llmail"}
     eval_bp = {r["text"] for r in eval_pool if r["source"] == "bipia"}
-    eval_benign = {r["body"].strip() for r in read_jsonl(EVAL / "benign_emails.jsonl")}
+    eval_benign = {r["body"].strip() for name in ("benign_emails.jsonl", "benign_emails_v2.jsonl")
+                   for r in read_jsonl(EVAL / name)}
     dev_benign = {r["body"].strip() for r in read_jsonl(DEV / "benign_emails.jsonl")}
     dev_ll = [r for r in dev_pool if r["source"] == "llmail"]
     dev_ia = [r for r in dev_pool if r["source"] == "injecagent"]

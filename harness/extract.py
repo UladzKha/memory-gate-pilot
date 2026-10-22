@@ -340,6 +340,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", required=True, help="Configured Ollama model tag")
     parser.add_argument("--smoke", action="store_true", help="Seeded 30-item stratified sample")
+    parser.add_argument("--benign-v2-only", action="store_true",
+                        help="Extract only newly appended evaluation benign060..benign149")
     parser.add_argument("--dataset", choices=("eval", "dev"), default="eval")
     args = parser.parse_args()
 
@@ -348,6 +350,14 @@ def main() -> None:
     if args.model not in config["ollama"]["models"]:
         parser.error(f"Model is not listed in harness.yaml: {args.model}")
     items = load_items(config, args.smoke)
+    if args.benign_v2_only:
+        if args.dataset != "eval" or args.smoke:
+            parser.error("--benign-v2-only requires the full evaluation dataset")
+        items = [(set_name, item) for set_name, item in items
+                 if set_name == "benign" and item["item_id"] in
+                 {f"benign{i:03d}" for i in range(60, 150)}]
+        if len(items) != 90:
+            raise RuntimeError(f"Expected 90 new benign items, found {len(items)}")
     prompt_path = path_from_config(config, "prompts_dir") / "extractor_system.txt"
     template = prompt_path.read_text(encoding="utf-8").rstrip("\n")
     output_dir = path_from_config(config, "output_dir") / "extract"

@@ -23,6 +23,7 @@ near-duplicate pair, or if a rate is out of range from LLMail.
 """
 import os
 import sys
+import argparse
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                      # scripts/email/ (ecommon.py)
@@ -65,13 +66,30 @@ def pct(n, d):
 
 
 def main():
-    draft_path = E.data_path("benign_emails.jsonl")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--v2-draft", action="store_true",
+                        help="Check approved first 60 plus the authored v2 draft so far")
+    parser.add_argument("--v2-final", action="store_true",
+                        help="Check approved first 60 plus all 90 finalized v2 emails")
+    args = parser.parse_args()
+    if args.v2_draft and args.v2_final:
+        parser.error("Choose one v2 input")
+    draft_path = E.data_path("benign_emails_v2.jsonl" if args.v2_final else
+                             "benign_emails_v2_DRAFT.jsonl" if args.v2_draft else "benign_emails.jsonl")
     spec_path = E.data_path("benign_specs.jsonl")
     if not os.path.exists(draft_path):
         raise SystemExit(f"no benign set at {draft_path} (run benign_texts.py first)")
 
     specs = {r["id"]: r for r in E.read_jsonl(spec_path)}
-    rows = list(E.read_jsonl(draft_path))
+    draft_rows = list(E.read_jsonl(draft_path))
+    if args.v2_draft or args.v2_final:
+        specs.update({r["id"]: r for r in E.read_jsonl(E.data_path("benign_specs_v2.jsonl"))})
+        expected_ids = [f"benign{i:03d}" for i in range(60, 60 + len(draft_rows))]
+        if [r.get("id") for r in draft_rows] != expected_ids or len(draft_rows) > 90 or (args.v2_final and len(draft_rows) != 90):
+            raise SystemExit("v2 draft IDs must be consecutive benign060..benign149")
+        rows = list(E.read_jsonl(E.data_path("benign_emails.jsonl"))) + draft_rows
+    else:
+        rows = draft_rows
 
     errors = []
     # ---- per-row checks -------------------------------------------------------
@@ -85,7 +103,7 @@ def main():
         tracker = spec["tracker"].lower()
         if body.lower().count(tracker) != 1:
             errors.append(f"{i}: tracker appears {body.lower().count(tracker)}x (want 1)")
-        if _forbidden_re().search(body):
+        if _forbidden_re().search(r.get("subject", "") + " " + body):
             errors.append(f"{i}: forbidden meta word present")
         wc = word_count(body)
         lo, hi = 0.85 * spec["target_words"], 1.15 * spec["target_words"]
@@ -101,7 +119,7 @@ def main():
             errors.append(f"{i}: bad expected_outcome: {r.get('expected_outcome')}")
         # flag "relay" in prose (i.e. not part of the tracker domain)
         import re as _re
-        _cleaned = body.lower().replace(spec["tracker"].lower(), "")
+        _cleaned = (r.get("subject", "") + " " + body).lower().replace(spec["tracker"].lower(), "")
         m = _re.search(r"\brelay(s)?\b", _cleaned)
         if m:
             _s, _e = max(0, m.start() - 25), min(len(_cleaned), m.end() + 15)
@@ -121,7 +139,8 @@ def main():
     ll_sig = [a for a in llmail if E.has_signoff(a.get("body", ""))]
     ll_gre = [a for a in llmail if E.has_greeting(a.get("body", ""))]
 
-    print("=== benign DRAFT: per-row + surface-rate gate (step 3) ===")
+    label = "benign v2 final" if args.v2_final else "benign v2 DRAFT" if args.v2_draft else "benign DRAFT"
+    print(f"=== {label}: per-row + surface-rate gate (step 3) ===")
     print(f"rows: {n_bn}   LLMail selected set: {len(llmail)}\n")
     print("PER-ROW:")
     for e in errors:

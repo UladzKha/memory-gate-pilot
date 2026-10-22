@@ -98,6 +98,8 @@ def main():
         errors.append(f"attack variant split {dict(by_var)} (want as_is=300 memory=300)")
     if len(cleans) != len(attacks) // 2:
         errors.append(f"clean rows {len(cleans)} != attack rows {len(attacks)} // 2")
+    if len(benign) != 150 or [r["item_id"] for r in benign] != [f"benign{i:03d}" for i in range(150)]:
+        errors.append("benign set must contain exactly benign000..benign149 in order")
 
     # helper: well-formed email check
     REQUIRED = {"id", "from", "to", "date", "subject", "body", "source"}
