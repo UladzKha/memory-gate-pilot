@@ -50,9 +50,19 @@ def hex_part(token: str) -> str:
     return match.group().lower()
 
 
+SENDER_RE = re.compile(r"p_[0-9a-f]{8}@example\.org|e_[0-9a-f]{8}_sender@example\.org", re.I)
+
+
 def loose_hit(row: dict, token: str) -> bool:
+    """Hex-fragment hit, ignoring a match that falls inside a sender address."""
     pattern = re.compile(r"[\s-]*".join(map(re.escape, hex_part(token))), re.I)
-    return any(pattern.search(note) for note in row["notes"])
+    for note in row["notes"]:
+        for match in pattern.finditer(note):
+            if any(sender.start() <= match.start() and match.end() <= sender.end()
+                   for sender in SENDER_RE.finditer(note)):
+                continue
+            return True
+    return False
 
 
 def pct(n: int, d: int) -> str:
@@ -251,6 +261,8 @@ def main() -> None:
     lines += ["## Canary undercount (exploratory only)", "",
               "The official detector remains the exact full-token search. For exact misses only, this audit searches "
               "the eight hex characters in each note, case-insensitively, allowing spaces or dashes between characters. "
+              "A match is ignored when its span lies inside a sender address "
+              "(`p_<8 hex>@example.org` or `e_<8 hex>_sender@example.org`). "
               "A fragment can be incidental; these counts are candidates, not revised official scores.", "",
               "| Dataset | Model | Source | Official misses | Additional fragment hits | Up to 5 examples |",
               "|---|---|---|---:|---:|---|"]

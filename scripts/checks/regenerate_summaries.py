@@ -43,15 +43,28 @@ def regenerate(dataset: str) -> None:
             raise ValueError(f"Missing prior run time for {model}")
         status = (manifest.get("dataset_versions", [{}])[-1].get("models", {}).get(model, {})
                   .get("status") or manifest["models"][model]["status"])
-        parts.append(build_summary(model, rows, items, status, float(time_match.group(1)),
-                                   manifest["commit"], manifest["extractor_prompt_sha256"]))
+        block = build_summary(model, rows, items, status, float(time_match.group(1)),
+                              manifest["commit"], manifest["extractor_prompt_sha256"])
+        llmail_commit = manifest.get("current_dataset_commit")
+        if llmail_commit:
+            tag = "dataset-v3" if dataset == "eval" else "dev-v2"
+            block += f"\n- LLMail rows commit: `{llmail_commit}` ({tag})"
+        parts.append(block)
+    llmail_commit = manifest.get("current_dataset_commit")
     if dataset == "eval" and "dataset_versions" in manifest:
         versions = manifest["dataset_versions"]
-        heading = ("# Evaluation extraction summary (dataset-v2)\n\n"
+        heading = ("# Evaluation extraction summary (dataset-v3)\n\n"
                    f"Dataset commits: `dataset-v1` `{versions[0]['commit']}`; "
-                   f"`dataset-v2` `{versions[-1]['commit']}`.\n\n")
+                   f"`dataset-v2` `{versions[-1]['commit']}`; "
+                   f"`dataset-v3` `{llmail_commit}` (LLMail rows).\n\n"
+                   "Each model section's Commit line is the commit recorded for the earlier rows. "
+                   "LLMail rows use the dataset-v3 commit on the following line.\n\n")
     else:
-        heading = "# Overnight extraction summary\n\n"
+        heading = ("# Overnight extraction summary\n\n"
+                   f"Dataset commits: `dev-v1` `{manifest['commit']}`; "
+                   f"`dev-v2` `{llmail_commit}` (LLMail rows).\n\n"
+                   "Each model section's Commit line is the commit recorded for the earlier rows. "
+                   "LLMail rows use the dev-v2 commit on the following line.\n\n")
     (out / "SUMMARY.md").write_text(heading + "\n\n".join(parts) + "\n", encoding="utf-8")
     print(f"Regenerated {out / 'SUMMARY.md'} ({len(items)} items per model)")
 
