@@ -22,11 +22,11 @@ from memgate import check_batch, guard, write_memory
 from .canary import canary_hit
 from .dataset import REPO_ROOT, verify_dataset, DATASET_FILES
 from .defend import load_dataset_items, load_extractions
-from .defenses import PromptGuard, ProtectAIDeberta
 from .extract import load_config, post_json, thinking_control
 from .preflight import get_json, loaded_models
 
 CONDITIONS = ("none", "promptguard", "protectai", "gate_write", "gate_full")
+CLASSIFIER_SCORES = {"promptguard": "prompt_guard", "protectai": "protectai_deberta"}
 OUTPUT = REPO_ROOT / "results/dev/l3"
 SYSTEM_PATH = REPO_ROOT / "harness/prompts/l3_system.txt"
 USER_PATH = REPO_ROOT / "harness/prompts/l3_user.txt"
@@ -132,6 +132,31 @@ def memory_for(condition: str, notes: list[str], item: dict, defenses: dict) -> 
         return [entry.text for entry in entries], entries
     classifier = defenses[condition]
     return [note for note in notes if classifier.check(note) != "block"], []
+
+
+def classifier_memory_from_score(score: dict, extraction: dict) -> list[str]:
+    """Reuse Level 2's note decisions and reject stale or reordered DEV scores."""
+    if score.get("extract_prompt_hash") != extraction["prompt_hash"] or score.get("item_id") != extraction["item_id"]:
+        raise ValueError(f"Stale Level 2 classifier score: {extraction['item_id']}")
+    memory = score.get("memory_notes")
+    if not isinstance(memory, list) or any(not isinstance(note, str) for note in memory):
+        raise ValueError(f"Invalid Level 2 classifier memory: {extraction['item_id']}")
+    source = iter(extraction["notes"])
+    if any(not any(candidate == note for candidate in source) for note in memory):
+        raise ValueError(f"Level 2 memory is not a note subsequence: {extraction['item_id']}")
+    return memory
+
+
+def load_classifier_scores(path: Path, model: str, condition: str) -> dict[str, dict]:
+    scores = {}
+    with path.open(encoding="utf-8") as stream:
+        for line in stream:
+            row = json.loads(line)
+            item_id = row["item_id"]
+            if item_id in scores or row["model"] != model or row["condition"] != CLASSIFIER_SCORES[condition]:
+                raise ValueError(f"Duplicate or mismatched Level 2 score: {item_id}")
+            scores[item_id] = row
+    return scores
 
 
 def message_pair(item: dict, notes: list[str]) -> list[dict]:
@@ -256,31 +281,31 @@ def run_model(model: str, conditions: tuple[str, ...] = CONDITIONS) -> None:
     extractions = load_extractions(extraction_path, model)
     selected_clean = clean_sample(items, model)
     missing = classifier_availability()
-    defenses = {}
-    classifier_skips = {}
-    if not missing:
-        defenses = {"promptguard": PromptGuard(), "protectai": ProtectAIDeberta()}
-        for name, defense in defenses.items():
-            try:
-                defense.check("Local classifier availability probe.")
-            except Exception as error:
-                classifier_skips[name] = f"local classifier unavailable: {type(error).__name__}: {error}"
     for condition in conditions:
         if condition not in CONDITIONS:
             raise ValueError(f"Unknown condition: {condition}")
         path = OUTPUT / f"{model}__{condition}.jsonl"
-        skip_reason = missing or classifier_skips.get(condition)
+        score_path = (REPO_ROOT / "results/dev/defend" / f"{model}__{CLASSIFIER_SCORES[condition]}.jsonl"
+                      if condition in CLASSIFIER_SCORES else None)
+        skip_reason = missing or ("Level 2 DEV classifier scores missing" if score_path and not score_path.exists() else None)
         if condition in ("promptguard", "protectai") and skip_reason:
             (OUTPUT / f"{model}__{condition}.skip.json").write_text(
                 json.dumps({"model": model, "condition": condition, "reason": skip_reason}, indent=2) + "\n")
             print(f"{model} {condition}: skipped ({skip_reason})", flush=True)
             continue
+        (OUTPUT / f"{model}__{condition}.skip.json").unlink(missing_ok=True)
+        classifier_scores = load_classifier_scores(score_path, model, condition) if score_path else {}
+        if score_path and len(classifier_scores) != len(extractions):
+            raise ValueError(f"Incomplete Level 2 classifier scores: {score_path}")
         saved = load_saved(path, model, condition)
         done = 0
         for extraction in extractions:
             item_id = extraction["item_id"]
             group, item = items[item_id]
-            notes, entries = memory_for(condition, extraction["notes"], item, defenses)
+            if condition in CLASSIFIER_SCORES:
+                notes, entries = classifier_memory_from_score(classifier_scores[item_id], extraction), []
+            else:
+                notes, entries = memory_for(condition, extraction["notes"], item, {})
             messages = message_pair(item, notes)
             signature = sha({"model": model, "condition": condition, "messages": messages,
                              "tools": TOOLS, "options": {"temperature": 0, "seed": 42, "rounds": 5},

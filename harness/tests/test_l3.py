@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from memgate import write_memory
-from harness.l3 import clean_sample, message_pair, mock_tool, run_item
+from harness.l3 import classifier_memory_from_score, clean_sample, message_pair, mock_tool, run_item
 
 
 class Level3Tests(unittest.TestCase):
@@ -42,6 +42,15 @@ class Level3Tests(unittest.TestCase):
         items = {f"clean{i:03}": ("clean", {}) for i in range(100)}
         self.assertEqual(clean_sample(items, "model-a"), clean_sample(items, "model-a"))
         self.assertEqual(len(clean_sample(items, "model-a")), 30)
+
+    def test_classifier_memory_reuses_exact_level2_decisions(self):
+        extraction = {"item_id": "dev-a", "prompt_hash": "sha-a", "notes": ["one", "two", "three"]}
+        score = {"item_id": "dev-a", "extract_prompt_hash": "sha-a", "memory_notes": ["one", "three"]}
+        self.assertEqual(classifier_memory_from_score(score, extraction), ["one", "three"])
+        with self.assertRaises(ValueError):
+            classifier_memory_from_score(dict(score, memory_notes=["three", "one"]), extraction)
+        with self.assertRaises(ValueError):
+            classifier_memory_from_score(dict(score, extract_prompt_hash="other"), extraction)
 
 
 if __name__ == "__main__":
