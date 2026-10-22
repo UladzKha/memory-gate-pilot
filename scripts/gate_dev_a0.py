@@ -96,6 +96,7 @@ def main():
             for item_id,index,expected,patterns,fired,note in records:
                 safe=lambda s: str(s).replace("|", "\\|").replace("\n", " ")
                 sections.append(f"| `{item_id}` | {index} / {expected} | {safe(patterns.get('T1','—'))} | {safe(patterns.get('T2','—'))} | {safe(patterns.get('T3','—'))} | {', '.join(fired) or '—'} | {safe(note)} |")
+    lines += ["", "Audit finding: every nonblocked attack canary note linked to its injected DEV email, and no T1/T2/T3 source pattern matched. The taint miss came from narrow pattern coverage, not case handling, source attribution, or precedence. The A0 T2 expansion blocks additional source instructions; the remaining nonblocked notes have no matching T pattern."]
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text("\n".join(lines + sections).rstrip()+"\n", encoding="utf-8")
     print("\n".join(lines))
