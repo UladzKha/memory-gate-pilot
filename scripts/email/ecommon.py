@@ -253,9 +253,10 @@ def bipia_hex8(cfg, seed):
     return new_hex8(make_rng(cfg, "canary." + seed + ".bipia"))
 
 
-def llmail_sender(hex8):
-    """Deterministic fake attacker address for an LLMail canary."""
-    return f"e_{hex8}_sender@example.org"
+def llmail_sender(cfg, item_id):
+    """Deterministic sender, derived independently of all canary seeds."""
+    hex8 = new_hex8(make_rng(cfg, "sender.llmail." + item_id))
+    return f"p_{hex8}@example.org"
 
 
 def max_inboxes_per_owner(cfg):

@@ -108,7 +108,7 @@ def main():
                 body = canary.memory_wrap(body, seed)
             att = {
                 "id": attack["attack_id"],
-                "from": E.llmail_sender(hex8),
+                "from": E.llmail_sender(cfg, item_id),
                 "to": owner_fake,
                 "date": att_date,
                 "subject": (subject or "Untitled").strip() or "Untitled",

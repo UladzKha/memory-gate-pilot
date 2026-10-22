@@ -341,7 +341,7 @@ pool regeneration) produce **byte-identical** outputs (`cmp` clean):
 | `data/processed/email/owners.jsonl` | `40dabbb552410c1f7003ae35bd72c5fa14a500e169477ea324d7ad5d16b49e35` |
 | `data/processed/email/parse_stats.json` | `5c97c0f6749654477d900a5f44af231d7f5a18d96715f2ac6f3a4e9f2749c265` |
 | `data/processed/email/mailbox_split.jsonl` (02) | `d07cf4ffc266f07f50057f016c209cebcd50f75eb10f267c35524deb1f4f8d5a` |
-| `data/processed/email/attack_inboxes.jsonl` (03) | `0cd8d113282c9c4941f3da9b6d830f91000854a3d7b34d6d6fb1f60a56f5ddb7` |
+| `data/processed/email/attack_inboxes.jsonl` (03) | `e3265a1fedc9d660b0492a9f218d9b15c564380ce55808b43e54d4a4ef688522` |
 | `data/processed/email/clean_set.jsonl` (05) | `363f3d4b777f7e4fbb410bbf057ac5b99c67cdaffe330a140214e5fff600a022` |
 | `data/processed/email/benign_set.jsonl` (06 + 07) | `56175cddae41c7978bc57b48691622b82e693e2b358e1c23b039e7ae9f2b76ac` |
 | `data/processed/email/_used_ctx_ids.txt` | `c23cd2c9f98d52780ef106d65a4372104db3ffdbaceffc73e3a99624ed235a96` |
@@ -369,3 +369,9 @@ distribution statement (https://www.cs.cmu.edu/~enron/):
 
 Data originally FERC-released, redacted for affected employees, no attachments,
 no CC / OSI license.
+
+## dataset-v3 sender repair
+
+LLMail injected From addresses now use the shared `p_<8 hex>@example.org` form. Each is seeded by `sender.llmail.<item_id>`, independently of the canary namespace. All 300 LLMail rows differ from dataset-v2 only in that From field. All 300 BIPIA attack rows and every benign and clean row are byte-identical to dataset-v2; all context emails are unchanged. The full canary appears in the LLMail Subject for 18 items (9 source attacks × 2 variants); these are original attack text, not bare fragments. The shared header validator permits only that complete token in those Subjects.
+
+Two consecutive rebuilds produced identical SHA-256 hashes. The new `attack_inboxes.jsonl` hash is `e3265a1fedc9d660b0492a9f218d9b15c564380ce55808b43e54d4a4ef688522`; benign and clean hashes remain as above.

@@ -44,6 +44,7 @@ sys.path.insert(0, _HERE)
 sys.path.insert(0, _HERE_EMAIL)
 
 import ecommon as E  # noqa: E402
+from header_checks import check_headers  # noqa: E402
 from common import load_config, read_jsonl  # noqa: E402
 
 # Canary-shaped token (LLMail email / BIPIA ticket) - used only for the CLEAN
@@ -77,6 +78,14 @@ def main():
     split_rows = list(read_jsonl(path("mailbox_split.jsonl")))
 
     errors = []
+    tokens = [r["canary"] for r in attacks + benign]
+    dev_dir = os.path.join(os.path.dirname(E.data_dir()), "email_dev")
+    for name in ("attack_inboxes", "benign_set"):
+        other = os.path.join(dev_dir, name + ".jsonl")
+        if os.path.exists(other):
+            tokens.extend(r["canary"] for r in read_jsonl(other))
+    header_errors, subject_items = check_headers(attacks + benign + cleans, tokens)
+    errors.extend(header_errors)
 
     # (1) mailbox groups
     groups = {r["owner"]: r["group"] for r in split_rows}

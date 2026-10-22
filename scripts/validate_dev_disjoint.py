@@ -10,7 +10,9 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "email"))
 from common import read_jsonl, word_count
+from header_checks import check_headers
 
 ROOT = Path(__file__).resolve().parents[1]
 EVAL = ROOT / "data/processed/email"
@@ -47,6 +49,10 @@ def validate():
             errors.append(f"shared {label}: {list(overlap)[:3]}")
     eval_all = sum(ev.values(), [])
     dev_all = sum(dev.values(), [])
+    header_errors, subject_items = check_headers(
+        dev_all, [r["canary"] for r in dev["attack_inboxes"] + dev["benign_set"]
+                 + ev["attack_inboxes"] + ev["benign_set"]])
+    errors.extend(header_errors)
     enron_sources = {"enron-context", "bipia-attack", "injecagent-attack"}
     eval_ids = {e["id"] for r in eval_all for e in r["emails"] if e["source"] in enron_sources}
     for name in ("_used_ctx_ids.txt", "_clean_ctx_used.txt"):

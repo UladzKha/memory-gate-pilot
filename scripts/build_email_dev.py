@@ -110,12 +110,13 @@ def build():
         shutil.copyfile(INJEC / "LICENCE", licence)
     if not licence.read_text().startswith("MIT License"):
         raise RuntimeError("InjecAgent license changed; stop")
+    # The dev-v1 owner split was built against evaluation v1 (60 benign rows).
+    # Preserve that frozen sampling frame when rebuilding after evaluation v2.
     eval_rows = [row for name in ("attack_inboxes", "benign_set", "clean_set")
-                 for row in read_jsonl(EVAL / f"{name}.jsonl")]
+                 for row in read_jsonl(EVAL / f"{name}.jsonl")
+                 if name != "benign_set" or int(row["item_id"][6:]) < 60]
     eval_used = {ep["id"] for row in eval_rows for ep in row["emails"]
                  if ep["source"] in ("enron-context", "bipia-attack")}
-    for name in ("_used_ctx_ids.txt", "_clean_ctx_used.txt"):
-        eval_used.update((EVAL / name).read_text().splitlines())
     eval_attacks = list(read_jsonl(EVAL / "attacks_pool.jsonl"))
     llmail = llmail_cases(cfg, eval_attacks)
     injec = source_cases(cfg)
@@ -185,7 +186,7 @@ def build():
                 if variant == "memory":
                     body = canary.memory_wrap(body, item_id)
                 date = E.seeded_injected_date(cfg, "dev.llmail." + item_id, [p["date"] for p in picks])
-                injected = {"id": attack["attack_id"], "from": E.llmail_sender(hex8),
+                injected = {"id": attack["attack_id"], "from": E.llmail_sender(cfg, item_id),
                             "to": recipient, "date": date, "subject": subject or "Untitled",
                             "body": body, "source": "llmail-attack"}
                 base = [ctx(p, recipient) for p in picks]

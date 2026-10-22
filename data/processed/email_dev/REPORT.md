@@ -1,6 +1,6 @@
 # Email development dataset report
 
-This is a development set for designing the memory-write gate. The frozen evaluation set is `data/processed/email/` at tag `dataset-v1` (`b9552336b49c454d5c9f31ffd2be68c89de12994`). Neither that directory nor `results/extract/` was changed by this build.
+This is a development set for designing the memory-write gate. The development sampling frame remains evaluation dataset-v1. This report records the dev-v2 sender repair and current evaluation dataset-v3 input hashes.
 
 ## Sources and licenses
 
@@ -24,7 +24,7 @@ This is a development set for designing the memory-write gate. The frozen evalua
 
 | file | sha256 |
 |---|---|
-| `data/processed/email_dev/attack_inboxes.jsonl` | `5bfa4cfbe8c288f287d0636537dd1ec5e60e46431b00cb8e3b6bf983436ab527` |
+| `data/processed/email_dev/attack_inboxes.jsonl` | `fb76706953a3525ae47eaf42908dfc5e64027b210d37f7f850a948cd1c22608b` |
 | `data/processed/email_dev/benign_set.jsonl` | `ec84c50cb6d97f233bafd77d06c9c98a9ab0ccadf862ffdfea3aa8af9bcf13f5` |
 | `data/processed/email_dev/clean_set.jsonl` | `a6681dbf932732a71597fbddb19b2d4e407df1a925f5bc8b8fa3a59b5ba3a34e` |
 | `data/processed/email_dev/attacks_pool.jsonl` | `2ec6dabcb69b0924f434663720631e55f8207a18538d9379e9d7eb8ad86fddcf` |
@@ -39,6 +39,12 @@ This is a development set for designing the memory-write gate. The frozen evalua
 
 | file | sha256 |
 |---|---|
-| `data/processed/email/attack_inboxes.jsonl` | `0cd8d113282c9c4941f3da9b6d830f91000854a3d7b34d6d6fb1f60a56f5ddb7` |
+| `data/processed/email/attack_inboxes.jsonl` | `e3265a1fedc9d660b0492a9f218d9b15c564380ce55808b43e54d4a4ef688522` |
 | `data/processed/email/benign_set.jsonl` | `c7d29cbbddfaf32b7b6329eff6ac565128c7f8d20ed7f4f8b7b53b30b047f5c1` |
 | `data/processed/email/clean_set.jsonl` | `363f3d4b777f7e4fbb410bbf057ac5b99c67cdaffe330a140214e5fff600a022` |
+
+## dev-v2 sender repair
+
+The 200 LLMail injected From addresses now use the shared `p_<8 hex>@example.org` form, seeded independently of canaries. Each of those 200 rows differs from dev-v1 only in that From field. Every InjecAgent, benign, clean, and context email is byte-identical to dev-v1, as are the mailbox split and source pools. The full canary appears in the LLMail Subject for 20 items (10 source attacks × 2 variants); these are original attack text, not bare fragments. The shared header validator permits only that complete token in those Subjects.
+
+Two consecutive rebuilds produced identical hashes. The new `attack_inboxes.jsonl` hash is `fb76706953a3525ae47eaf42908dfc5e64027b210d37f7f850a948cd1c22608b`; benign and clean hashes remain as above.
