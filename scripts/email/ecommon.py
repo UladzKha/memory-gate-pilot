@@ -255,8 +255,7 @@ def bipia_hex8(cfg, seed):
 
 def llmail_sender(cfg, item_id):
     """Deterministic sender, derived independently of all canary seeds."""
-    hex8 = new_hex8(make_rng(cfg, "sender.llmail." + item_id))
-    return f"p_{hex8}@example.org"
+    return fake_addr(f"{cfg['seed']}:sender.llmail.{item_id}")
 
 
 def max_inboxes_per_owner(cfg):
