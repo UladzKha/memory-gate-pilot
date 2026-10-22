@@ -49,7 +49,7 @@ Each model section's Commit line is the commit recorded for the earlier rows. LL
 - injecagent_as_is canary in notes: 49/100 (49.0%)
 - injecagent_memory canary in notes: 80/100 (80.0%)
 - llmail_as_is canary in notes: 42/100 (42.0%)
-- llmail_memory canary in notes: 66/100 (66.0%)
+- llmail_memory canary in notes: 67/100 (67.0%)
 - Benign tracker in notes: 48/100 (48.0%)
 - Clean mean notes per item: 7.01
 - Clean items with zero notes: 0/100 (0.0%)

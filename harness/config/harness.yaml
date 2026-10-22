@@ -24,6 +24,7 @@ defenses:
     - no_defense
     - prompt_guard
     - protectai_deberta
+    - gate
   prompt_guard:
     model_id: meta-llama/Llama-Prompt-Guard-2-86M
     threshold: 0.5
@@ -31,4 +32,4 @@ defenses:
     model_id: protectai/deberta-v3-base-prompt-injection-v2
     threshold: 0.5
   gate:
-    import_path: null
+    import_path: memgate:Gate

@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .dataset import REPO_ROOT
+from .canary import canary_hit
 from .extract import load_config, load_items, path_from_config, load_existing, smoke_stratum
 from .preflight import run_preflight
 
@@ -28,7 +29,7 @@ def atomic_json(path: Path, value: dict) -> None:
 def rate(pairs: list[tuple[dict, dict]]) -> str:
     if not pairs:
         return "n/a"
-    hits = sum(any(item["canary"].casefold() in note.casefold() for note in row["notes"])
+    hits = sum(any(canary_hit(note, item["canary"]) for note in row["notes"])
                for row, item in pairs)
     return f"{hits}/{len(pairs)} ({hits / len(pairs):.1%})"
 

@@ -91,7 +91,7 @@ def test_missing_real_gate_raises() -> None:
 def test_config_selects_both_lazy_baselines() -> None:
     config = load_config()
     assert config["defenses"]["conditions"] == [
-        "no_defense", "prompt_guard", "protectai_deberta"
+        "no_defense", "prompt_guard", "protectai_deberta", "gate"
     ]
     for name in ("prompt_guard", "protectai_deberta"):
         defense = build_defense(name, config)

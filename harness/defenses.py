@@ -123,10 +123,21 @@ class GateAdapter(Defense):
             self._gate = gate_object() if isinstance(gate_object, type) else gate_object
             if not callable(getattr(self._gate, "check", None)):
                 raise TypeError("Imported gate must provide check(note)")
-        decision = self._gate.check(note)
-        if decision not in ("allow", "quarantine", "block"):
+        decision = self._gate.check(note, None, "")
+        outcome = getattr(decision, "outcome", decision)
+        if outcome not in ("allow", "quarantine", "block"):
             raise ValueError(f"Real gate returned invalid decision: {decision!r}")
-        return decision
+        return outcome
+
+    def check_batch(self, notes: list[str], inbox: list[dict], owner: str) -> list:
+        if self._gate is None:
+            self.check("")
+        decisions = self._gate.check_batch(notes, inbox, owner)
+        if len(decisions) != len(notes) or any(
+            decision.outcome not in ("allow", "quarantine", "block") for decision in decisions
+        ):
+            raise ValueError("Real gate returned invalid batch decisions")
+        return decisions
 
 
 def build_defense(name: str, config: dict) -> Defense:
