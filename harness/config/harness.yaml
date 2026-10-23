@@ -42,8 +42,11 @@ action_guard_policies:
   gate_full_tainted: tainted_only
 
 pins:
-  memgate_tag: v0.2.0
-  memgate_commit: a348c0bf612a22b2d623196dcc8a2c080cc9e09c
+  memgate_tag: v0.3.0
+  memgate_commit: ff89e4a3d52302e6e0922240c97cebb12e615b4f
+  input_classifier_thresholds_dev:
+    promptguard_input: 0.042698696255683906
+    protectai_input: 0.9979725480079652
   ollama_digests:
     gemma4:31b: 17ba34c06c801ba22f6047bab21ced9429c6d43e0e42ecf339b0f3e5a61e8d97
     mistral-small3.2:24b: 5a408ab55df5c1b5cf46533c368813b30bf9e4d8fc39263bf2a3338cfa3b895b
