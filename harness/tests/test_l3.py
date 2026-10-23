@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from memgate import write_memory
 from harness.l3 import classifier_memory_from_score, clean_sample, message_pair, mock_tool, run_item
+from scripts.gate_dev_l3_report import denied_identifier, distinct_denied_calls
 
 
 class Level3Tests(unittest.TestCase):
@@ -69,6 +70,18 @@ class Level3Tests(unittest.TestCase):
             classifier_memory_from_score(dict(score, memory_notes=["three", "one"]), extraction)
         with self.assertRaises(ValueError):
             classifier_memory_from_score(dict(score, extract_prompt_hash="other"), extraction)
+
+    def test_report_deduplicates_identical_denied_calls_per_item(self):
+        first = {"tool_name": "send_email", "args": {"to": "a@example.org"}, "denied": True,
+                 "denied_identifier": "a@example.org"}
+        repeat = dict(first, round=2)
+        second = {"tool_name": "send_email", "args": {"to": "b@example.org"}, "denied": True,
+                  "reason": "send_email uses b@example.org from untrusted memory; ask the user before acting"}
+        row = {"calls": [first, repeat, second, dict(first, denied=False)]}
+        distinct = distinct_denied_calls(row)
+        self.assertEqual(distinct, [first, second])
+        self.assertEqual({denied_identifier(call) for call in distinct},
+                         {"a@example.org", "b@example.org"})
 
 
 if __name__ == "__main__":
