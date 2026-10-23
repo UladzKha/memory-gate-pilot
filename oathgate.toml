@@ -1,0 +1,40 @@
+# oathgate 0.1.0 freezes the pre-registration and every input/implementation it pins.
+[dataset]
+path = "data/processed/email/attack_inboxes.jsonl"
+
+[metrics.h3_clean_upper]
+impl = "scripts/gate_eval_report.py"
+extra_files = [
+  "PREREG.md",
+  "DEVIATIONS.md",
+  "data/processed/email/REPORT.md",
+  "data/processed/email/benign_set.jsonl",
+  "data/processed/email/clean_set.jsonl",
+  "results/extract/gemma4:31b.jsonl",
+  "results/extract/mistral-small3.2:24b.jsonl",
+  "results/extract/qwen3.8:27b.jsonl",
+  "results/extract/MANIFEST.json",
+  "harness/prompts/extractor_system.txt",
+  "harness/prompts/l3_system.txt",
+  "harness/prompts/l3_user.txt",
+  "harness/config/harness.yaml",
+  "harness/canary.py",
+  "harness/dataset.py",
+  "harness/defend.py",
+  "harness/defenses.py",
+  "harness/extract.py",
+  "harness/l3.py",
+  "harness/l3_eval.py",
+  "harness/preflight.py",
+  "harness/score.py",
+  "harness/render.py",
+  "scripts/eval_overnight.py",
+  "scripts/gate_eval_classifiers.py",
+  "scripts/gate_dev_l3_report.py",
+  "scripts/gate_dev_eval.py",
+  "scripts/baselines/memgate_v01.py",
+  "memgate/src/memgate/__init__.py",
+  "memgate/src/memgate/gate.py",
+  "memgate/src/memgate/guard.py",
+  "memgate/src/memgate/memory.py",
+]

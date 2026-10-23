@@ -1,0 +1,31 @@
+{
+  "frozen_at": "2026-10-23T08:25:49+00:00",
+  "history": [
+    {
+      "frozen_at": "2026-10-23T08:25:02+00:00",
+      "predictions": [
+        {
+          "metric": "h3_clean_upper",
+          "note": "prereg-v1: H3 max Wilson upper; strict inequality in PREREG.md",
+          "operator": "<=",
+          "value": 0.2
+        }
+      ],
+      "ruler_hash": "4a61d51d828e2a286f67b8491775b777569c14339f605621cae42e1cae7722d2",
+      "spec_path": "oathgate.toml",
+      "superseded_at": "2026-10-23T08:25:49+00:00",
+      "version": 1
+    }
+  ],
+  "predictions": [
+    {
+      "metric": "h3_clean_upper",
+      "note": "prereg-v1: H3 max Wilson upper; strict inequality in PREREG.md",
+      "operator": "<=",
+      "value": 0.2
+    }
+  ],
+  "ruler_hash": "0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65",
+  "spec_path": "oathgate.toml",
+  "version": 1
+}
