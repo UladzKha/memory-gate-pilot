@@ -33,3 +33,7 @@ defenses:
     threshold: 0.5
   gate:
     import_path: memgate:Gate
+
+action_guard_policies:
+  gate_full: strict
+  gate_full_tainted: tainted_only

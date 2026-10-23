@@ -1,4 +1,4 @@
-"""Export every saved Level 3 full-guard clean denial, using DEV inputs only."""
+"""Export distinct saved strict full-guard clean denials, using DEV inputs only."""
 
 from __future__ import annotations
 
@@ -67,7 +67,12 @@ def main() -> None:
                 for (note, decision), entry in zip(retained, memory)
             ):
                 raise ValueError(f"Stored DEV memory provenance changed: {model} {item_id}")
+            seen_calls = set()
             for call in denied:
+                call_key = (call["tool_name"], json.dumps(call["args"], sort_keys=True, ensure_ascii=False))
+                if call_key in seen_calls:
+                    continue
+                seen_calls.add(call_key)
                 match = REASON.fullmatch(call["reason"] or "")
                 if not match:
                     raise ValueError(f"Unrecognized guard denial: {model} {item_id}")
@@ -85,7 +90,7 @@ def main() -> None:
                 counts[model][kind] += 1
 
     lines = ["# DEV full-guard clean denials", "",
-             "Every denied mock tool call on a selected clean DEV item is listed below. Counts are per call; one item can have several denials. The linked source is recomputed from the saved DEV extraction and DEV inbox. A rule value of `none` means the note was stored as `allow`, but its source sender was not trusted, so the action guard still denied its target.", "",
+             "Every distinct denied mock tool call on a selected clean DEV item is listed below. Repeated identical calls within an item count once; one item can have several distinct denials. The linked source is recomputed from the saved DEV extraction and DEV inbox. A rule value of `none` means the note was stored as `allow`, but its source sender was not trusted, so the strict action guard still denied its target.", "",
              "| Model | Email | REF | Account | URL | Path | Amount | Total |",
              "|---|---:|---:|---:|---:|---:|---:|---:|"]
     for model in sorted(counts):

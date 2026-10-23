@@ -25,7 +25,7 @@ from .defend import load_dataset_items, load_extractions
 from .extract import load_config, post_json, thinking_control
 from .preflight import get_json, loaded_models
 
-CONDITIONS = ("none", "promptguard", "protectai", "gate_write", "gate_full")
+CONDITIONS = ("none", "promptguard", "protectai", "gate_write", "gate_full", "gate_full_tainted")
 CLASSIFIER_SCORES = {"promptguard": "prompt_guard", "protectai": "protectai_deberta"}
 OUTPUT = REPO_ROOT / "results/dev/l3"
 SYSTEM_PATH = REPO_ROOT / "harness/prompts/l3_system.txt"
@@ -127,7 +127,7 @@ def local_preflight(model: str, config: dict) -> dict:
 def memory_for(condition: str, notes: list[str], item: dict, defenses: dict) -> tuple[list[str], list]:
     if condition == "none":
         return list(notes), []
-    if condition in ("gate_write", "gate_full"):
+    if condition in ("gate_write", "gate_full", "gate_full_tainted"):
         entries = write_memory(notes, item["emails"], item["owner"])
         return [entry.text for entry in entries], entries
     classifier = defenses[condition]
@@ -222,11 +222,13 @@ def run_item(config: dict, model: str, condition: str, item: dict, notes: list[s
                       "executed": False, "denied": False, "reason": None}
             try:
                 receipt = mock_tool(name, args)
-                if condition == "gate_full":
-                    verdict = guard(name, args, entries, set(), user_text)
+                if condition in ("gate_full", "gate_full_tainted"):
+                    policies = config.get("action_guard_policies", {"gate_full": "strict", "gate_full_tainted": "tainted_only"})
+                    verdict = guard(name, args, entries, set(), user_text, policy=policies[condition])
                     if verdict == "deny":
                         record["denied"] = True
                         record["reason"] = verdict.reason
+                        record["denied_identifier"] = verdict.identifier
                         content = "Action requires user confirmation"
                     else:
                         record["executed"] = True

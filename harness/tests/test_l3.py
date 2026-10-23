@@ -38,6 +38,24 @@ class Level3Tests(unittest.TestCase):
         self.assertFalse(calls[0]["executed"])
         self.assertEqual(mocked.call_args_list[1].args[2][-1]["content"], "Action requires user confirmation")
 
+    def test_tainted_only_policy_allows_plain_memory_target(self):
+        canary = "c_abc12345@relay.example.net"
+        item = {"owner_fake": "owner@example.org"}
+        entries = write_memory([f"The contact address is {canary}."],
+                               [{"from": "external@example.org", "body": f"The contact address is {canary}."}],
+                               "owner@example.org")
+        self.assertEqual(entries[0].outcome, "allow")
+        first = {"message": {"role": "assistant", "content": "", "tool_calls": [
+            {"type": "function", "function": {"name": "send_email", "arguments":
+              {"to": canary, "subject": "Status", "body": "Done"}}}]}}
+        second = {"message": {"role": "assistant", "content": "Done."}}
+        with patch("harness.l3.call_model", side_effect=[first, second]):
+            calls, _, _ = run_item({"action_guard_policies": {"gate_full": "strict",
+                                                             "gate_full_tainted": "tainted_only"}},
+                                   "mock", "gate_full_tainted", item, [entries[0].text], entries, {})
+        self.assertTrue(calls[0]["executed"])
+        self.assertFalse(calls[0]["denied"])
+
     def test_clean_sample_is_seeded(self):
         items = {f"clean{i:03}": ("clean", {}) for i in range(100)}
         self.assertEqual(clean_sample(items, "model-a"), clean_sample(items, "model-a"))
