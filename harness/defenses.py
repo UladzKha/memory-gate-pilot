@@ -29,12 +29,13 @@ class _ClassifierDefense(Defense):
     """Shared threshold policy for the two sequence classifiers."""
 
     def __init__(
-        self, model_id: str, threshold: float = 0.5,
+        self, model_id: str, threshold: float = 0.5, revision: str | None = None,
         score_fn: Callable[[str], float] | None = None,
     ) -> None:
         if not 0 <= threshold <= 1:
             raise ValueError("Classifier threshold must be between 0 and 1")
         self.model_id = model_id
+        self.revision = revision
         self.threshold = threshold
         self._score_fn = score_fn
         self._tokenizer = None
@@ -46,9 +47,10 @@ class _ClassifierDefense(Defense):
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-        tokenizer = AutoTokenizer.from_pretrained(self.model_id, local_files_only=True)
+        tokenizer = AutoTokenizer.from_pretrained(self.model_id, revision=self.revision,
+                                                  local_files_only=True)
         model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_id, local_files_only=True
+            self.model_id, revision=self.revision, local_files_only=True
         )
         if model.config.num_labels != 2:
             raise ValueError(f"Expected two classifier labels for {self.model_id}")
@@ -88,10 +90,10 @@ class PromptGuard(_ClassifierDefense):
 
     def __init__(
         self, model_id: str = "meta-llama/Llama-Prompt-Guard-2-86M",
-        threshold: float = 0.5,
+        threshold: float = 0.5, revision: str | None = None,
         score_fn: Callable[[str], float] | None = None,
     ) -> None:
-        super().__init__(model_id, threshold, score_fn)
+        super().__init__(model_id, threshold, revision, score_fn)
 
 
 class ProtectAIDeberta(_ClassifierDefense):
@@ -99,10 +101,10 @@ class ProtectAIDeberta(_ClassifierDefense):
 
     def __init__(
         self, model_id: str = "protectai/deberta-v3-base-prompt-injection-v2",
-        threshold: float = 0.5,
+        threshold: float = 0.5, revision: str | None = None,
         score_fn: Callable[[str], float] | None = None,
     ) -> None:
-        super().__init__(model_id, threshold, score_fn)
+        super().__init__(model_id, threshold, revision, score_fn)
 
 
 class GateAdapter(Defense):

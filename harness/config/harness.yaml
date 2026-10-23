@@ -27,13 +27,24 @@ defenses:
     - gate
   prompt_guard:
     model_id: meta-llama/Llama-Prompt-Guard-2-86M
+    revision: a8ded8e697ce7c355e395a0df51f94adb4a2fd27
     threshold: 0.5
   protectai_deberta:
     model_id: protectai/deberta-v3-base-prompt-injection-v2
+    revision: 90c9989b1a342275dd0d1a95aad283c04e075671
     threshold: 0.5
   gate:
     import_path: memgate:Gate
 
 action_guard_policies:
   gate_full: strict
+  gate_full_strict: strict
   gate_full_tainted: tainted_only
+
+pins:
+  memgate_tag: v0.2.0
+  memgate_commit: a348c0bf612a22b2d623196dcc8a2c080cc9e09c
+  ollama_digests:
+    gemma4:31b: 17ba34c06c801ba22f6047bab21ced9429c6d43e0e42ecf339b0f3e5a61e8d97
+    mistral-small3.2:24b: 5a408ab55df5c1b5cf46533c368813b30bf9e4d8fc39263bf2a3338cfa3b895b
+    qwen3.8:27b: 22130167c4c20e20c7b71454612966ca8e8171e9b3cc8ab6ce8aa6cbfec79643

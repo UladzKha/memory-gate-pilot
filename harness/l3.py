@@ -78,13 +78,14 @@ def classifier_availability() -> str | None:
     return "missing local Python packages: " + ", ".join(missing) if missing else None
 
 
-def local_preflight(model: str, config: dict) -> dict:
-    """Mirror extraction preflight without reading or verifying evaluation inputs."""
-    verify_dataset("dev")
+def local_preflight(model: str, config: dict, dataset: str = "dev") -> dict:
+    """Check the selected frozen dataset and local model before Level 3 calls."""
+    verify_dataset(dataset)
     if model not in config["ollama"]["models"]:
         raise ValueError(f"Model not configured: {model}")
+    dataset_tree = "data/processed/email_dev/" if dataset == "dev" else "data/processed/email/"
     status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all", "--",
-                             "harness/", "scripts/", "data/processed/email_dev/"],
+                             "harness/", "scripts/", dataset_tree],
                             cwd=REPO_ROOT, text=True, capture_output=True, check=True)
     if status.stdout.strip():
         raise RuntimeError("DEV code or dataset tree is dirty:\n" + status.stdout)
@@ -109,9 +110,9 @@ def local_preflight(model: str, config: dict) -> dict:
         raise RuntimeError("Other models loaded on configured Ollama ports: " + json.dumps(others))
     if len(resident) != 1 or resident[0].get("size_vram") != resident[0].get("size") or not resident[0].get("size"):
         raise RuntimeError("Model is not fully resident on GPU: " + json.dumps(resident))
-    dev_dir = REPO_ROOT / "data/processed/email_dev"
+    dataset_dir = REPO_ROOT / config["paths"]["dataset_dir"]
     return {"model": model, "model_digest": matches[0].get("digest"), "commit": commit,
-            "dataset_hashes": {name: hashlib.sha256((dev_dir / name).read_bytes()).hexdigest()
+            "dataset_hashes": {name: hashlib.sha256((dataset_dir / name).read_bytes()).hexdigest()
                                for name in DATASET_FILES},
             "system_sha256": hashlib.sha256(SYSTEM_PATH.read_bytes()).hexdigest(),
             "user_sha256": hashlib.sha256(USER_PATH.read_bytes()).hexdigest(),

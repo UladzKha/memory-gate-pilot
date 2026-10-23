@@ -97,6 +97,8 @@ def test_config_selects_both_lazy_baselines() -> None:
         defense = build_defense(name, config)
         assert defense.name == name
         assert defense.threshold == 0.5
+        assert defense.revision == config["defenses"][name]["revision"]
+        assert len(defense.revision) == 40
         assert defense._model is None
 
 
