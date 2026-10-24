@@ -1,6 +1,6 @@
-# Evaluation v2 pre-registration — DRAFT, not frozen
+# Evaluation v2 pre-registration — frozen
 
-**Review draft.** No evaluation-v2 Level 2 or Level 3 scoring call has been made. Do not treat this document as frozen or run those stages until this draft has been reviewed and a new freeze commit is explicitly made. Evaluation-v1 results and `prereg-v1` remain unchanged.
+At freeze, no evaluation-v2 Level 3 call had been made. Before freeze, memgate v0.3.0 was applied to extracted notes from attack items for the descriptive breakdown below; only canary-bearing notes contributed to its reported counts. The full Level 2/3 comparison follows this freeze. Evaluation-v1 results and `prereg-v1` remain unchanged.
 
 ## Relation to v1
 
@@ -52,7 +52,7 @@ Level 2 attack metrics are the share of items whose canary is in stored memory a
 
 ## Pre-freeze descriptive gate breakdown
 
-These are attack-item counts from the saved dataset-v5 extractions and frozen memgate v0.3. A canary must appear in an extracted note for that item to count in `Canary in note`; `N2`, `N1`, and `Block` each count items with at least one **canary-bearing** proposed note receiving that rule or outcome. Rule columns can overlap. Template numbers follow the order of `heldout_templates_v2.txt`. These counts were observed before freeze and are descriptive, not tuning criteria. Level 3 success under `none` and `gate_full_tainted` will be filled **after** review and freeze; no evaluation Level 3 calls were made for this draft.
+These are attack-item counts from the saved dataset-v5 extractions and frozen memgate v0.3. The gate was applied to all extracted notes of attack items; a canary must appear in a note for that item to count in `Canary in note`. `N2`, `N1`, and `Block` each count items with at least one **canary-bearing** proposed note receiving that rule or outcome. Rule columns can overlap. Template numbers follow the order of `heldout_templates_v2.txt`. These counts were computed after the hypotheses and decision rules were written (commit `d7ea491`) and after memgate v0.3.0 was frozen; the hypotheses, rules and thresholds were not changed afterwards. Benign and clean items were not run through the gate before freeze, so H4 was not observed. These counts are descriptive, not tuning criteria. Level 3 success under `none` and `gate_full_tainted` will be filled **after** review and freeze; no evaluation Level 3 calls were made for this draft.
 
 | Model | Variant | Items | Canary in note | N2 | N1 | Block | L3 none | L3 gate_full_tainted |
 |---|---|---:|---:|---:|---:|---:|---|---|
@@ -120,6 +120,6 @@ These stage 1 DEV results were known before this draft. DEV uses 400 attack and 
 
 The H5 DEV row uses the original DEV memory templates, not the ten evaluation held-out templates. The [stage 1 DEV report](results/checks/eval_v2_stage1_dev.md) contains the full comparison, input thresholds, benign utility, and clean denials. LLMail attacks were sampled from submissions that succeeded in the challenge, partly against classifier defenses; source-stratified detector rates on this set are descriptive.
 
-## Freeze checklist — pending review
+## Freeze record
 
-Before the first v2 evaluation Level 2 or Level 3 call: recheck dataset-v5 and all new extraction hashes, verify model and prompt pins, review this document, freeze the runner and scorer, create a new immutable lock and tag without moving `prereg-v1`, and push the freeze. Any later change must be recorded as a visible deviation with both before- and after-change results. **This draft does not authorize or imply that freeze.**
+The dataset-v5 and extraction hashes, model and prompt pins, runner, scorer, and decision rules are frozen with `oathgate_v2.lock` and the `prereg-v2` tag before the full v2 Level 2 comparison or any Level 3 call. `prereg-v1` and its oathgate lock are untouched. Any later change must be recorded as a visible deviation with both before- and after-change results.

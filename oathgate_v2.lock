@@ -1,0 +1,15 @@
+{
+  "frozen_at": "2026-10-24T06:34:24+00:00",
+  "history": [],
+  "predictions": [
+    {
+      "metric": "h3_clean_upper",
+      "note": "V2 H3 strict upper bound <20%; all H1-H5 decision rules are in PREREG_v2.md",
+      "operator": "<=",
+      "value": 0.2
+    }
+  ],
+  "ruler_hash": "d11d5dc9def78c3bb48f122d61a6e8c49a21aa79bf799c463050a986212b8c76",
+  "spec_path": "oathgate_v2.toml",
+  "version": 1
+}
