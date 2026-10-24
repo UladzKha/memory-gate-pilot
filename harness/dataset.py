@@ -16,11 +16,12 @@ def verify_dataset(dataset: str = "eval") -> None:
     if dataset not in ("eval", "dev"):
         raise ValueError(f"Unknown dataset: {dataset}")
     directory = DATASET_DIR if dataset == "eval" else REPO_ROOT / "data/processed/email_dev"
-    v4_proof = directory / "V4_DIFF_PROOF.md"
-    report_path = v4_proof if dataset == "eval" and v4_proof.exists() else directory / "REPORT.md"
+    proof_path = next((directory / name for name in ("V5_DIFF_PROOF.md", "V4_DIFF_PROOF.md")
+                       if dataset == "eval" and (directory / name).exists()), None)
+    report_path = proof_path or directory / "REPORT.md"
     report = report_path.read_text(encoding="utf-8")
     for name in DATASET_FILES:
-        if report_path == v4_proof:
+        if proof_path is not None:
             pattern = re.compile(
                 rf"^\| `{re.escape(name)}` \| `[0-9a-f]{{64}}` \| `([0-9a-f]{{64}})` \|$",
                 re.MULTILINE,

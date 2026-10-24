@@ -12,7 +12,7 @@ ollama:
 
 paths:
   dataset_dir: data/processed/email
-  report: data/processed/email/REPORT.md
+  report: data/processed/email/V5_DIFF_PROOF.md
   attack_inboxes: data/processed/email/attack_inboxes.jsonl
   benign_set: data/processed/email/benign_set.jsonl
   clean_set: data/processed/email/clean_set.jsonl
@@ -42,6 +42,7 @@ action_guard_policies:
   gate_full_tainted: tainted_only
 
 pins:
+  dataset_tag: dataset-v5
   memgate_tag: v0.3.0
   memgate_commit: ff89e4a3d52302e6e0922240c97cebb12e615b4f
   input_classifier_thresholds_dev:
