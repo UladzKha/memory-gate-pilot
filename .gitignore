@@ -3,6 +3,7 @@ data/raw/
 
 # Large intermediates, rebuilt by scripts
 data/processed/email/enron_pool.jsonl
+data/processed/email/enron_v2_context_pool.jsonl
 data/processed/email/benign_emails_REJECTED.jsonl
 
 # Harness outputs (decide later what to publish)
