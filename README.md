@@ -153,7 +153,7 @@ A second post-hoc file, [`results/checks/eval_v2_robustness_exploratory.md`](res
 
 ## Known limitations
 
-The source files do not have one list under these names. Each item below is a limit already stated, or a direct reading of a stated rule.
+Most items below are limits stated in the source files; the reuse/determinism item is an added note.
 
 - **Laundering.** A note that does not match the write rules is stored as `allow`, not `allow_tainted`. The tainted-only action check does not look at `allow` notes. The report's "Canary untainted" column counts attack items in that state. The word "laundering" is not used in the report.
 - **Fixed attacks.** The attack emails are the saved LLMail-Inject and BIPIA texts. This run does not give the attacker a new try after seeing memgate. `PREREG_v2.md` also says v2 was designed after seeing v1, and that the evaluation set was not used to tune the gate.
