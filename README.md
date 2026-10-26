@@ -203,7 +203,7 @@ python -m scripts.eval_v2_report
 
 The raw corpora are not in git. A rerun that rebuilds the dataset needs them on disk under `data/raw/`. The processed evaluation files that are already in git are enough to re-score saved extractions.
 
-The agent-stage output archive is planned for release `artifacts-v2-agent`. It contains the saved defense decisions and tool calls needed to recompute `eval_v2.md` and the exploratory oversight analysis without model calls. The fresh-clone checks below passed.
+The agent-stage output archive is attached to release `artifacts-v2-agent`. It contains the saved defense decisions and tool calls needed to recompute `eval_v2.md` and the exploratory oversight analysis without model calls. The fresh-clone checks below passed.
 
 ## Verify the pre-registration
 
@@ -255,7 +255,7 @@ Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc
 
 ### Recompute the saved-agent reports
 
-`agent-outputs-v2.tar.gz` is planned as an attachment to release [`artifacts-v2-agent`](https://github.com/UladzKha/memory-gate-pilot/releases/tag/artifacts-v2-agent). It is 18,937,672 bytes. SHA-256: `780cfb465818093f7cd52b125f1e86c51faf0e8bcd2e718e6166ed53ade36b79`. It contains `results/v2/defend/`, `results/v2/l3/`, and `SHA256SUMS` for all 51 files.
+`agent-outputs-v2.tar.gz` is attached to release [`artifacts-v2-agent`](https://github.com/UladzKha/memory-gate-pilot/releases/tag/artifacts-v2-agent). It is 18,937,672 bytes. SHA-256: `780cfb465818093f7cd52b125f1e86c51faf0e8bcd2e718e6166ed53ade36b79`. It contains `results/v2/defend/`, `results/v2/l3/`, and `SHA256SUMS` for all 51 files.
 
 After that release is published, run these commands in a fresh clone. They use memgate v0.3.0 (`ff89e4a3d52302e6e0922240c97cebb12e615b4f`) and the two frozen archives from `prereg-v2`.
 
@@ -322,6 +322,10 @@ Enron text in the processed sets still contains real names and historical corpus
 There is no paper in this repo. Cite the pre-registration tag:
 
 Khadakouski, Uladzimir (2026). memgate pilot. https://github.com/UladzKha/memory-gate-pilot , tag `prereg-v2` (`1992905c9cabf7780439c442c6e194b65cdaab24`).
+
+The dataset and outputs on Zenodo:
+
+Khadakouski, U. (2026). memgate pilot: email data and outputs for prompt injection into agent memory (evaluation v2) (Version v2-agent) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.23665517
 
 The gate library: https://github.com/UladzKha/memgate , tag `v0.3.0` (`ff89e4a3d52302e6e0922240c97cebb12e615b4f`).
 
