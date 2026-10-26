@@ -1,5 +1,9 @@
 # memgate pilot
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23665517.svg)](https://doi.org/10.5281/zenodo.23665517)
+
+Data and outputs are archived on Zenodo: https://doi.org/10.5281/zenodo.23665517
+
 memgate is a local, deterministic gate between untrusted email text and an AI agent's long-term memory. Before a note is stored, the gate decides `allow`, `allow_tainted`, or `block`, and it keeps the source sender with the note. Before a tool call, a second check can deny targets that came from tainted memory, or from any untrusted sender. The gate does not call a model. It does not read the agent's prompt. It does not stop an attacker who never lands in memory. This repository is the evaluation harness and the frozen pre-registration. The library itself is [memgate v0.3.0](https://github.com/UladzKha/memgate/releases/tag/v0.3.0).
 
 ## Summary
@@ -300,7 +304,7 @@ scripts/           dataset build, eval runners, report writers
 
 The MIT `LICENSE` in this repo covers the code and the author-written data: the benign emails and the templates. Third-party data keeps its own terms. This `LICENSE` does not relicense it.
 
-See the [dataset card](DATASET_CARD.md) for contents, sources, and personal data. The [Enron context pool manifest](data/processed/email/enron_v2_context_pool.MANIFEST.json) records how to rebuild the untracked intermediate pool.
+See the [dataset card](DATASET_CARD.md) for contents, sources, and personal data. The data and outputs are archived on Zenodo with DOI [10.5281/zenodo.23665517](https://doi.org/10.5281/zenodo.23665517). The [Enron context pool manifest](data/processed/email/enron_v2_context_pool.MANIFEST.json) records how to rebuild the untracked intermediate pool.
 
 | Data | Terms | Where stated |
 |---|---|---|
