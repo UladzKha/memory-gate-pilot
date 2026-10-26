@@ -4,6 +4,29 @@ This file records how to check the oathgate locks. It does not change `DEVIATION
 
 `oathgate check` hashes the spec plus every file the spec names. The lock stores one ruler hash, not a per-file hash. Exit 0 and the line `ok <hash>` mean the working tree matches that lock.
 
+This file and the verification steps in it exist only on `main`, not at the tags. Read them from `main` while you work in a tag checkout.
+
+## Get the frozen archives
+
+The frozen files that are not in git are in two archives on the release `prereg-v2`: https://github.com/UladzKha/memory-gate-pilot/releases/tag/prereg-v2. They are not committed.
+
+| File | Size (bytes) | SHA-256 |
+|---|---:|---|
+| `frozen-artifacts-v1.tar.gz` | 1,289,244 | `dfb6cc706eaffd066d3d43257317174fd521397d68d76ddf51abfa1025dba28b` |
+| `frozen-artifacts-v2.tar.gz` | 2,411,106 | `6e90f7a8a4076fc965b47d3ccdc933f0dfd5c0a8498237d76b5f023d6ac4c9d2` |
+
+Each archive stores its files at their repo paths, plus `SHA256SUMS`. After unpacking, `sha256sum -c SHA256SUMS` checks them. Unpacking leaves `SHA256SUMS` at the repo root. It is safe to delete.
+
+## Install oathgate
+
+```sh
+pip install git+https://github.com/UladzKha/oathgate@v0.1.0
+```
+
+The same version is on PyPI: `pip install oathgate==0.1.0`.
+
+`git clone --branch prereg-vN` prints `warning: refs/tags/prereg-vN ... is not a commit!`. The tags are annotated, so the warning is harmless.
+
 ## v1
 
 | Item | Value |
@@ -29,6 +52,18 @@ The v1 pin of the gate library is memgate `v0.2.0`, commit `a348c0bf612a22b2d623
 | Tag | `prereg-v2` = `1992905c9cabf7780439c442c6e194b65cdaab24` |
 
 On `main` at the time of these notes, `oathgate check --spec oathgate_v2.toml --lock oathgate_v2.lock` prints `ok` and the hash above. The v2 pin is memgate `v0.3.0`, commit `ff89e4a3d52302e6e0922240c97cebb12e615b4f`.
+
+## Verifying v2
+
+1. Clone this repo at tag `prereg-v2`: `git clone --branch prereg-v2 https://github.com/UladzKha/memory-gate-pilot.git`
+2. Download `frozen-artifacts-v2.tar.gz` and unpack it at the repo root: `tar -xzf frozen-artifacts-v2.tar.gz`
+3. Run `oathgate check --spec oathgate_v2.toml --lock oathgate_v2.lock`
+
+Expected ruler hash: `d11d5dc9def78c3bb48f122d61a6e8c49a21aa79bf799c463050a986212b8c76`.
+
+A `./memgate` clone is not needed for v2. The archive contains the four memgate files the v2 spec hashes (`memgate/src/memgate/__init__.py`, `gate.py`, `guard.py`, `memory.py`), at v0.3.0.
+
+`../memgate` in the README's Reproduce section is for running the harness. The freeze checks do not use it: v1 uses `./memgate`, and v2 uses the archive.
 
 ## Why v1 fails on main
 
@@ -56,9 +91,9 @@ The v1 freeze includes four memgate modules. v1 was run with memgate v0.2.0 (com
 - `results/extract/qwen3.8:27b.jsonl`
 - `results/extract/MANIFEST.json`
 
-1. Check out this repo at tag `prereg-v1`.
-2. Check out memgate at tag `v0.2.0` into `./memgate`.
-3. Unpack `frozen-artifacts-v1.tar.gz` at the repo root so the four paths above are in place.
+1. Clone this repo at tag `prereg-v1`, separate from any v2 clone: `git clone --branch prereg-v1 https://github.com/UladzKha/memory-gate-pilot.git`
+2. Clone memgate at tag `v0.2.0` into `./memgate` at the repo root: `git clone --branch v0.2.0 https://github.com/UladzKha/memgate.git memgate`
+3. Download `frozen-artifacts-v1.tar.gz` and unpack it at the repo root so the four paths above are in place: `tar -xzf frozen-artifacts-v1.tar.gz`
 4. Run `oathgate check --spec oathgate.toml --lock oathgate.lock`.
 
 Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.

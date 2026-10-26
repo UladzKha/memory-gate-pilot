@@ -162,6 +162,7 @@ The source files do not have one list under these names. Each item below is a li
 - **Benign mail was written for this study.** `data/processed/email/REPORT.md` says the benign class is authored, not mined.
 - **Three models.** The decisions are per model: `qwen3.8:27b`, `gemma4:31b`, and `mistral-small3.2:24b`. `PREREG_v2.md` says a pooled-model claim does not replace the per-model decisions.
 - **No human study.** Nothing in the repository is a study with human reviewers. The oversight note says its blind-approval figure does not model later behavior.
+- **Reuse assumes determinism.** Reused rows assume the agent would produce the same transcript for the same memory text (temperature 0, seed 42). Ollama on GPU does not fully guarantee this.
 
 ## Reproduce
 
@@ -173,7 +174,7 @@ Settings are in `harness/config/harness.yaml` (inside the v2 oathgate hash): tem
 | `gemma4:31b` | `17ba34c06c801ba22f6047bab21ced9429c6d43e0e42ecf339b0f3e5a61e8d97` |
 | `mistral-small3.2:24b` | `5a408ab55df5c1b5cf46533c368813b30bf9e4d8fc39263bf2a3338cfa3b895b` |
 
-The harness expects Ollama at `http://localhost:11434` and refuses a digest that does not match. Install the library at the pinned commit, then the Python packages:
+The harness expects Ollama at `http://localhost:11434` and refuses a digest that does not match. Install the library at the pinned commit, then the Python packages. The `../memgate` clone below is for running the harness. The freeze checks do not use it: v1 uses `./memgate` at tag `v0.2.0`, and v2 uses the memgate files in the v2 archive (see Verify the pre-registration).
 
 ```sh
 git clone https://github.com/UladzKha/memgate.git ../memgate
@@ -202,15 +203,49 @@ The raw corpora are not in git. A rerun that rebuilds the dataset needs them on 
 
 Read [`FREEZE_NOTES.md`](FREEZE_NOTES.md). It has the spec names, lock hashes, freeze times, and tags `prereg-v1` and `prereg-v2` (`1992905`).
 
-On a checkout that has the gitignored frozen files:
+`FREEZE_NOTES.md` and the steps below exist only on `main`, not at the tags. Read them from `main` while you work in a tag checkout.
+
+### Get the frozen archives
+
+The frozen files that are not in git are in two archives on the release [`prereg-v2`](https://github.com/UladzKha/memory-gate-pilot/releases/tag/prereg-v2). They are not committed.
+
+| File | Size (bytes) | SHA-256 |
+|---|---:|---|
+| `frozen-artifacts-v1.tar.gz` | 1,289,244 | `dfb6cc706eaffd066d3d43257317174fd521397d68d76ddf51abfa1025dba28b` |
+| `frozen-artifacts-v2.tar.gz` | 2,411,106 | `6e90f7a8a4076fc965b47d3ccdc933f0dfd5c0a8498237d76b5f023d6ac4c9d2` |
+
+Each archive stores its files at their repo paths, plus `SHA256SUMS`. After unpacking, `sha256sum -c SHA256SUMS` checks them. Unpacking leaves `SHA256SUMS` at the repo root. It is safe to delete.
+
+### Install oathgate
 
 ```sh
-oathgate check --spec oathgate_v2.toml --lock oathgate_v2.lock
+pip install git+https://github.com/UladzKha/oathgate@v0.1.0
 ```
 
-Those 18 files are not in git. `frozen-artifacts-v2.tar.gz` (2,411,106 bytes, not committed) stores them at their repo paths, plus `SHA256SUMS`. For v2, unpack it at the repo root, then run the check above. The archive's memgate sources are v0.3.0.
+The same version is on PyPI: `pip install oathgate==0.1.0`.
 
-v1 is a separate check. Use tag `prereg-v1`, memgate tag `v0.2.0` in `./memgate`, and `frozen-artifacts-v1.tar.gz` only. Do not use memgate sources from the v2 archive for v1. The steps and the expected hash `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65` are in [`FREEZE_NOTES.md`](FREEZE_NOTES.md). With memgate v0.3.0 the v1 check fails, because `gate.py` changed in v0.3.0.
+### v2
+
+1. Clone this repo at tag `prereg-v2`: `git clone --branch prereg-v2 https://github.com/UladzKha/memory-gate-pilot.git`
+2. Download `frozen-artifacts-v2.tar.gz` and unpack it at the repo root: `tar -xzf frozen-artifacts-v2.tar.gz`
+3. Run `oathgate check --spec oathgate_v2.toml --lock oathgate_v2.lock`
+
+Expected ruler hash: `d11d5dc9def78c3bb48f122d61a6e8c49a21aa79bf799c463050a986212b8c76`.
+
+A `./memgate` clone is not needed for v2. The archive contains the four memgate files the v2 spec hashes (`memgate/src/memgate/__init__.py`, `gate.py`, `guard.py`, `memory.py`), at v0.3.0.
+
+### v1
+
+v1 is a separate check. Use a separate clone. Do not use memgate sources from the v2 archive for v1.
+
+1. Clone this repo at tag `prereg-v1`: `git clone --branch prereg-v1 https://github.com/UladzKha/memory-gate-pilot.git`
+2. Clone memgate at tag `v0.2.0` into `./memgate` at the repo root: `git clone --branch v0.2.0 https://github.com/UladzKha/memgate.git memgate`
+3. Download `frozen-artifacts-v1.tar.gz` and unpack it at the repo root: `tar -xzf frozen-artifacts-v1.tar.gz`
+4. Run `oathgate check --spec oathgate.toml --lock oathgate.lock`
+
+Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`. With memgate v0.3.0 the v1 check fails, because `gate.py` changed in v0.3.0. More detail is in [`FREEZE_NOTES.md`](FREEZE_NOTES.md).
+
+`git clone --branch prereg-vN` prints `warning: refs/tags/prereg-vN ... is not a commit!`. The tags are annotated, so the warning is harmless.
 
 ## Repository layout
 
@@ -237,7 +272,7 @@ The MIT `LICENSE` in this repo covers the code and the author-written data: the 
 | Enron | No CC or OSI licence. CMU / William Cohen research distribution. Be careful with privacy | `data/processed/email/REPORT.md` |
 | AMI (superseded) | CC BY 4.0 | `data/raw/ami/LICENCE.txt` (local only) |
 | InjecAgent (dev set) | MIT, Copyright 2023 Qiusi Zhan | `data/processed/email_dev/INJECAGENT_LICENCE.txt` |
-| memgate | MIT, Copyright 2026 UladzKha | the memgate repo |
+| memgate | MIT, Copyright 2026 Uladzimir Khadakouski | the memgate repo |
 
 Enron text in the processed sets still contains real names and historical corpus content. Addresses were rewritten to `p_<hex>@example.org`.
 
