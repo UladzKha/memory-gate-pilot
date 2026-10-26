@@ -199,7 +199,7 @@ python -m scripts.eval_v2_report
 
 The raw corpora are not in git. A rerun that rebuilds the dataset needs them on disk under `data/raw/`. The processed evaluation files that are already in git are enough to re-score saved extractions.
 
-The agent-stage output archive is not available yet. Recomputing `eval_v2.md` and the exploratory oversight analysis from a fresh clone has not been verified for this release.
+The agent-stage output archive is planned for release `artifacts-v2-agent`. It contains the saved defense decisions and tool calls needed to recompute `eval_v2.md` and the exploratory oversight analysis without model calls. The fresh-clone checks below passed.
 
 ## Verify the pre-registration
 
@@ -248,6 +248,39 @@ v1 is a separate check. Use a separate clone. Do not use memgate sources from th
 Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`. With memgate v0.3.0 the v1 check fails, because `gate.py` changed in v0.3.0. More detail is in [`FREEZE_NOTES.md`](FREEZE_NOTES.md).
 
 `git clone --branch prereg-vN` prints `warning: refs/tags/prereg-vN ... is not a commit!`. The tags are annotated, so the warning is harmless.
+
+### Recompute the saved-agent reports
+
+`agent-outputs-v2.tar.gz` is planned as an attachment to release [`artifacts-v2-agent`](https://github.com/UladzKha/memory-gate-pilot/releases/tag/artifacts-v2-agent). It is 18,937,672 bytes. SHA-256: `780cfb465818093f7cd52b125f1e86c51faf0e8bcd2e718e6166ed53ade36b79`. It contains `results/v2/defend/`, `results/v2/l3/`, and `SHA256SUMS` for all 51 files.
+
+After that release is published, run these commands in a fresh clone. They use memgate v0.3.0 (`ff89e4a3d52302e6e0922240c97cebb12e615b4f`) and the two frozen archives from `prereg-v2`.
+
+```sh
+git clone https://github.com/UladzKha/memory-gate-pilot.git
+cd memory-gate-pilot
+git checkout e1a29a6
+python -m venv .venv
+git clone --branch v0.3.0 https://github.com/UladzKha/memgate.git memgate
+.venv/bin/python -m pip install -r harness/requirements.txt
+.venv/bin/python -m pip install -e ./memgate
+.venv/bin/python -m pip freeze > /tmp/memory-gate-pilot-repro-pip-freeze.txt
+gh release download prereg-v2 -R UladzKha/memory-gate-pilot -p 'frozen-artifacts-v1.tar.gz' -p 'frozen-artifacts-v2.tar.gz'
+gh release download artifacts-v2-agent -R UladzKha/memory-gate-pilot -p 'agent-outputs-v2.tar.gz'
+printf '%s  %s\n' 'dfb6cc706eaffd066d3d43257317174fd521397d68d76ddf51abfa1025dba28b' frozen-artifacts-v1.tar.gz | sha256sum -c -
+printf '%s  %s\n' '6e90f7a8a4076fc965b47d3ccdc933f0dfd5c0a8498237d76b5f023d6ac4c9d2' frozen-artifacts-v2.tar.gz | sha256sum -c -
+printf '%s  %s\n' '780cfb465818093f7cd52b125f1e86c51faf0e8bcd2e718e6166ed53ade36b79' agent-outputs-v2.tar.gz | sha256sum -c -
+tar -xzf frozen-artifacts-v1.tar.gz
+sha256sum -c SHA256SUMS
+tar -xzf frozen-artifacts-v2.tar.gz
+sha256sum -c SHA256SUMS
+tar -xzf agent-outputs-v2.tar.gz
+sha256sum -c SHA256SUMS
+.venv/bin/python -m scripts.eval_v2_report
+git diff --exit-code -- results/checks/eval_v2.md
+git checkout fcdf2ab
+.venv/bin/python -m scripts.oversight_exploratory
+git diff --exit-code -- results/checks/eval_v2_oversight_exploratory.md
+```
 
 ## Repository layout
 
