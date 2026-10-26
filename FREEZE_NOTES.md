@@ -45,27 +45,22 @@ A check on `main` with the files currently on disk does not match. Expected `043
 
 The memgate copy on disk is `v0.3.0`. Its `gate.py` is not the v1 bytes. SHA-256 of `memgate/src/memgate/gate.py` on disk is `36bb60895f1439d630b89d34fba25b82c4884efa41525e1ea1c1a6d999d0d357`. The same path at memgate `a348c0b` is `f2ffa3c467c58242acf694dc379050f26b26435cab23f3c22f6cbf3a64393f5d`. `__init__.py`, `guard.py`, and `memory.py` have the same SHA-256 at both commits.
 
-## How to verify v1
+## Verifying v1
 
-Check v1 at the tag, not on `main`.
+The v1 freeze includes four memgate modules. v1 was run with memgate v0.2.0 (commit `a348c0bf612a22b2d623196dcc8a2c080cc9e09c`, tag `v0.2.0` on `UladzKha/memgate`), not v0.3.0. To verify v1:
 
-```sh
-git worktree add ../mgp-prereg-v1 prereg-v1
-cd ../mgp-prereg-v1
-mkdir -p results/extract memgate/src/memgate
-# The four results/extract files are gitignored. Link the copies from the main checkout.
-# Then put memgate v0.2.0 sources in memgate/src/memgate/.
-# From the memgate clone: git show a348c0bf612a22b2d623196dcc8a2c080cc9e09c:src/memgate/<file>
-oathgate check --spec oathgate.toml --lock oathgate.lock
-```
+1. Check out this repo at tag `prereg-v1`.
+2. Check out memgate at tag `v0.2.0` into `./memgate`.
+3. Put the gitignored extraction files from the release archive in place. Copy only `results/extract/gemma4:31b.jsonl`, `results/extract/mistral-small3.2:24b.jsonl`, and `results/extract/qwen3.8:27b.jsonl`. Do not use the memgate sources from the archive. Those are v0.3.0.
+4. Run `oathgate check --spec oathgate.toml --lock oathgate.lock`.
 
-That command was run on 2026-10-26. With the tag's tracked files, the on-disk `results/extract/` files, and memgate `v0.2.0` sources, it printed `ok 0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.
+Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.
 
-The same tag with the on-disk memgate `v0.3.0` sources failed. Expected the v1 hash. Actual `c1335673088187b69e9532a6db920e9c42414fef01e6036d0c0ea269048c737d`. The only change between those two checks was the four memgate modules. Three of them already matched `v0.2.0`. So the on-disk extract files still match the v1 ruler, and `gate.py` does not.
+With memgate v0.3.0 the check fails, because `gate.py` changed in v0.3.0. On 2026-10-26 that tree hashed to `c1335673088187b69e9532a6db920e9c42414fef01e6036d0c0ea269048c737d`.
 
-v1 also hashes `results/extract/MANIFEST.json`, which is gitignored and is not in the v2 spec. The passing check used the on-disk file. Its SHA-256 is `8739b807b7f7cc6755408f98a3b1daa3373f62f4b03ea90d9c0a16f9f0d2ce39`.
+v1 also hashes `results/extract/MANIFEST.json`. That file is gitignored and is not in `frozen-artifacts-v2.tar.gz`. Put it in `results/extract/` with the three JSONL files. Its SHA-256 is `8739b807b7f7cc6755408f98a3b1daa3373f62f4b03ea90d9c0a16f9f0d2ce39`. Without it, `oathgate check` stops before it prints a ruler hash (`cannot read results/extract/MANIFEST.json`).
 
-Remove the worktree when finished: `git worktree remove ../mgp-prereg-v1`.
+This procedure was run on 2026-10-26 with memgate `v0.2.0`, the three extraction JSONL files, and that `MANIFEST.json`. The check printed `ok 0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.
 
 ## Frozen paths that are not in git
 
