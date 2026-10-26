@@ -183,7 +183,7 @@ oathgate check --spec oathgate_v2.toml --lock oathgate_v2.lock
 
 Those 18 files are not in git. `frozen-artifacts-v2.tar.gz` (2,411,106 bytes, not committed) stores them at their repo paths, plus `SHA256SUMS`. For v2, unpack it at the repo root, then run the check above. The archive's memgate sources are v0.3.0.
 
-v1 is a separate check. Use tag `prereg-v1`, memgate tag `v0.2.0` in `./memgate`, and the `results/extract/*.jsonl` files from the archive. The steps, the expected hash `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`, and the extra `results/extract/MANIFEST.json` file are in [`FREEZE_NOTES.md`](FREEZE_NOTES.md). With memgate v0.3.0 the v1 check fails, because `gate.py` changed in v0.3.0.
+v1 is a separate check. Use tag `prereg-v1`, memgate tag `v0.2.0` in `./memgate`, and `frozen-artifacts-v1.tar.gz` only. Do not use memgate sources from the v2 archive for v1. The steps and the expected hash `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65` are in [`FREEZE_NOTES.md`](FREEZE_NOTES.md). With memgate v0.3.0 the v1 check fails, because `gate.py` changed in v0.3.0.
 
 ## Repository layout
 

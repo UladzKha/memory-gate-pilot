@@ -47,20 +47,25 @@ The memgate copy on disk is `v0.3.0`. Its `gate.py` is not the v1 bytes. SHA-256
 
 ## Verifying v1
 
-The v1 freeze includes four memgate modules. v1 was run with memgate v0.2.0 (commit `a348c0bf612a22b2d623196dcc8a2c080cc9e09c`, tag `v0.2.0` on `UladzKha/memgate`), not v0.3.0. To verify v1:
+The v1 freeze includes four memgate modules. v1 was run with memgate v0.2.0 (commit `a348c0bf612a22b2d623196dcc8a2c080cc9e09c`, tag `v0.2.0` on `UladzKha/memgate`). v1 verification uses only `frozen-artifacts-v1.tar.gz` plus that memgate tag. Do not use memgate sources from `frozen-artifacts-v2.tar.gz` for v1. Those sources are v0.3.0, and `gate.py` changed in v0.3.0.
+
+`frozen-artifacts-v1.tar.gz` is 1,289,244 bytes. SHA-256 `dfb6cc706eaffd066d3d43257317174fd521397d68d76ddf51abfa1025dba28b`. It is not in git. It stores these paths, plus `SHA256SUMS`:
+
+- `results/extract/gemma4:31b.jsonl`
+- `results/extract/mistral-small3.2:24b.jsonl`
+- `results/extract/qwen3.8:27b.jsonl`
+- `results/extract/MANIFEST.json`
 
 1. Check out this repo at tag `prereg-v1`.
 2. Check out memgate at tag `v0.2.0` into `./memgate`.
-3. Put the gitignored extraction files from the release archive in place. Copy only `results/extract/gemma4:31b.jsonl`, `results/extract/mistral-small3.2:24b.jsonl`, and `results/extract/qwen3.8:27b.jsonl`. Do not use the memgate sources from the archive. Those are v0.3.0.
+3. Unpack `frozen-artifacts-v1.tar.gz` at the repo root so the four paths above are in place.
 4. Run `oathgate check --spec oathgate.toml --lock oathgate.lock`.
 
 Expected ruler hash: `0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.
 
 With memgate v0.3.0 the check fails, because `gate.py` changed in v0.3.0. On 2026-10-26 that tree hashed to `c1335673088187b69e9532a6db920e9c42414fef01e6036d0c0ea269048c737d`.
 
-v1 also hashes `results/extract/MANIFEST.json`. That file is gitignored and is not in `frozen-artifacts-v2.tar.gz`. Put it in `results/extract/` with the three JSONL files. Its SHA-256 is `8739b807b7f7cc6755408f98a3b1daa3373f62f4b03ea90d9c0a16f9f0d2ce39`. Without it, `oathgate check` stops before it prints a ruler hash (`cannot read results/extract/MANIFEST.json`).
-
-This procedure was run on 2026-10-26 with memgate `v0.2.0`, the three extraction JSONL files, and that `MANIFEST.json`. The check printed `ok 0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`.
+This procedure was run on 2026-10-26 with memgate `v0.2.0` and these four files. The check printed `ok 0436ede7fa1ab9b1e9ae9bb5290e57f4e39136b2ed3bd49229f31d77cc2d5e65`. `sha256sum -c` on the archive's `SHA256SUMS` passed.
 
 ## Frozen paths that are not in git
 
