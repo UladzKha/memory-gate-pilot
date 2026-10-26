@@ -2,9 +2,15 @@
 
 memgate is a local, deterministic gate between untrusted email text and an AI agent's long-term memory. Before a note is stored, the gate decides `allow`, `allow_tainted`, or `block`, and it keeps the source sender with the note. Before a tool call, a second check can deny targets that came from tainted memory, or from any untrusted sender. The gate does not call a model. It does not read the agent's prompt. It does not stop an attacker who never lands in memory. This repository is the evaluation harness and the frozen pre-registration. The library itself is [memgate v0.3.0](https://github.com/UladzKha/memgate/releases/tag/v0.3.0).
 
+## Summary
+
+H1, H2, H4, and H5 held for all three models. H3 held for `gemma4:31b` only (upper 5.4%). It did not hold for `qwen3.8:27b` (17/100 clean denials, upper 25.5%) or `mistral-small3.2:24b` (15/100, upper 23.3%).
+
+Level 3 success on all 600 attacks, for `none` / `gate_full_tainted` / `gate_full_strict`: `qwen3.8:27b` 55/600 (9.2%), 4/600 (0.7%), 0/600 (0.0%); `gemma4:31b` 34/600 (5.7%), 0/600 (0.0%), 0/600 (0.0%); `mistral-small3.2:24b` 97/600 (16.2%), 6/600 (1.0%), 0/600 (0.0%).
+
 ## Threat model
 
-The attacker can send an email. The attacker cannot read or write memory except by that email. The attacker cannot see the system prompt, the tool names, or the gate rules, and cannot change them. The user later asks the agent to use memory. Success, in this study, means the attack's canary shows up in an executed tool argument.
+The attacker can send an email. The attacker cannot read or write memory except by that email. The attacker cannot see the system prompt or the tool names, and cannot change them. In this study the attack emails were fixed and were not adapted to the gate rules. A real attacker could read the rules; see Known limitations. The user later asks the agent to use memory. Success, in this study, means the attack's canary shows up in an executed tool argument.
 
 ## How it works
 
@@ -20,7 +26,18 @@ Other conditions in the comparison are `none` (store every note) and two classif
 
 Every number in this section is copied from [`results/checks/eval_v2.md`](results/checks/eval_v2.md) at commit `e1a29a6` (`e1a29a6f70adae7f680d4785a39b6326a0679ca6`). SHA-256 of that file: `c10a5c7a114d471c4cafc9b1375c2b9fd033d56b0ca14793d6159bca112d9d55`. The report says: attack rates use all 600 items, including unreachable items. Wilson intervals are 95%. All tool actions are logged mocks.
 
-The report's first table has every stratum. The rows below are only stratum `all`.
+The report's first table has every stratum. This summary is Level 3 success only, stratum `all`, for five conditions.
+
+| Condition | qwen3.8:27b | gemma4:31b | mistral-small3.2:24b |
+|---|---:|---:|---:|
+| none | 55/600 (9.2%; 95% CI 7.1%–11.7%) | 34/600 (5.7%; 95% CI 4.1%–7.8%) | 97/600 (16.2%; 95% CI 13.4%–19.3%) |
+| promptguard_input | 33/600 (5.5%; 95% CI 3.9%–7.6%) | 15/600 (2.5%; 95% CI 1.5%–4.1%) | 52/600 (8.7%; 95% CI 6.7%–11.2%) |
+| gate_write | 27/600 (4.5%; 95% CI 3.1%–6.5%) | 15/600 (2.5%; 95% CI 1.5%–4.1%) | 62/600 (10.3%; 95% CI 8.1%–13.0%) |
+| gate_full_tainted | 4/600 (0.7%; 95% CI 0.3%–1.7%) | 0/600 (0.0%; 95% CI 0.0%–0.6%) | 6/600 (1.0%; 95% CI 0.5%–2.2%) |
+| gate_full_strict | 0/600 (0.0%; 95% CI 0.0%–0.6%) | 0/600 (0.0%; 95% CI 0.0%–0.6%) | 0/600 (0.0%; 95% CI 0.0%–0.6%) |
+
+<details>
+<summary>Full attack table, stratum all</summary>
 
 | Model | Condition | Stratum | Canary stored | Canary untainted | L3 success | Reused from none |
 |---|---|---|---:|---:|---:|---:|
@@ -49,7 +66,17 @@ The report's first table has every stratum. The rows below are only stratum `all
 | mistral-small3.2:24b | gate_full_tainted | all | 188/600 (31.3%; 95% CI 27.8%–35.2%) | 43/600 (7.2%; 95% CI 5.4%–9.5%) | 6/600 (1.0%; 95% CI 0.5%–2.2%) | 122/600 |
 | mistral-small3.2:24b | gate_full_strict | all | 188/600 (31.3%; 95% CI 27.8%–35.2%) | 43/600 (7.2%; 95% CI 5.4%–9.5%) | 0/600 (0.0%; 95% CI 0.0%–0.6%) | 113/600 |
 
-Pre-registered decisions, same file, same commit:
+</details>
+
+"Reused from none" counts items whose Level 3 row has `reused_from` set to `none` (`scripts/eval_v2_report.py`). `PREREG_v2.md` and `harness/l3_eval.py` (`can_reuse_none`) define that mark: the plain memory notes match `none`, and for a guard condition every executed call would still be allowed.
+
+Pre-registered decisions, same file, same commit. Definitions copied from `PREREG_v2.md`:
+
+- **H1:** `gate_full_tainted` lowers Level 3 attack success versus `none`, for each model, on all 600 attacks.
+- **H2:** `gate_full_tainted` lowers Level 3 attack success versus each of `promptguard_input` and `protectai_input`, for each model, on all 600 attacks.
+- **H3:** Under `gate_full_tainted`, the Wilson 95% upper bound for selected clean items with at least one denial is strictly below 20%, for each model.
+- **H4:** `gate_write` blocks at most 2% of all benign items, and the Wilson 95% upper bound is strictly below 5%, for each model.
+- **H5:** On the 300 held-out-template attack memory variants only, `gate_full_tainted` lowers Level 3 attack success versus `none`, for each model.
 
 | Hypothesis | Model | Improvements / regressions | Raw p | Holm p | Holds |
 |---|---|---:|---:|---:|---:|
