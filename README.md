@@ -199,6 +199,8 @@ python -m scripts.eval_v2_report
 
 The raw corpora are not in git. A rerun that rebuilds the dataset needs them on disk under `data/raw/`. The processed evaluation files that are already in git are enough to re-score saved extractions.
 
+The agent-stage output archive is not available yet. Recomputing `eval_v2.md` and the exploratory oversight analysis from a fresh clone has not been verified for this release.
+
 ## Verify the pre-registration
 
 Read [`FREEZE_NOTES.md`](FREEZE_NOTES.md). It has the spec names, lock hashes, freeze times, and tags `prereg-v1` and `prereg-v2` (`1992905`).
@@ -265,6 +267,8 @@ scripts/           dataset build, eval runners, report writers
 
 The MIT `LICENSE` in this repo covers the code and the author-written data: the benign emails and the templates. Third-party data keeps its own terms. This `LICENSE` does not relicense it.
 
+See the [dataset card](DATASET_CARD.md) for contents, sources, and personal data. The [Enron context pool manifest](data/processed/email/enron_v2_context_pool.MANIFEST.json) records how to rebuild the untracked intermediate pool.
+
 | Data | Terms | Where stated |
 |---|---|---|
 | LLMail-Inject | MIT | Hugging Face dataset card `microsoft/llmail-inject-challenge`; raw files are local only |
@@ -274,7 +278,7 @@ The MIT `LICENSE` in this repo covers the code and the author-written data: the 
 | InjecAgent (dev set) | MIT, Copyright 2023 Qiusi Zhan | `data/processed/email_dev/INJECAGENT_LICENCE.txt` |
 | memgate | MIT, Copyright 2026 Uladzimir Khadakouski | the memgate repo |
 
-Enron text in the processed sets still contains real names and historical corpus content. Addresses were rewritten to `p_<hex>@example.org`.
+Enron text in the processed sets still contains real names and historical corpus content. Header addresses in the evaluation and development sets were rewritten to `p_<hex>@example.org`. Email bodies were not anonymised and still contain real names, and in some places real addresses and phone numbers.
 
 ## How to cite
 
